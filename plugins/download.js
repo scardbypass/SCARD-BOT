@@ -36,6 +36,18 @@ function getUrl(text = '') {
   }
 }
 
+async function resolveYtDlp() {
+  const configured=String(process.env.YTDLP_PATH||'').trim()
+  const candidates=[configured,'/usr/local/bin/yt-dlp','/usr/bin/yt-dlp','/root/.local/bin/yt-dlp'].filter(Boolean)
+  for(const command of candidates){
+    try{await execFileAsync(command,['--version'],{timeout:5000});return {command,prefix:[]}}catch{}
+  }
+  for(const py of ['python3','python']){
+    try{await execFileAsync(py,['-m','yt_dlp','--version'],{timeout:5000});return {command:py,prefix:['-m','yt_dlp']}}catch{}
+  }
+  throw new Error('YTDLP_NOT_INSTALLED')
+}
+
 async function findDownloadedFile(dir, id) {
   const files = await fs.promises.readdir(dir)
   const file = files.find(name =>
@@ -79,9 +91,12 @@ module.exports = {
       await sock.sendPresenceUpdate('composing', msg.key.remoteJid).catch(() => {})
       await reply('⏳ Sedang mendownload video...')
 
+      const ytdlp=await resolveYtDlp()
+      console.log('[DOWNLOAD] yt-dlp via',ytdlp.command,ytdlp.prefix.join(' '))
       await execFileAsync(
-        process.env.YTDLP_PATH || 'yt-dlp',
+        ytdlp.command,
         [
+          ...ytdlp.prefix,
           '--no-playlist',
           '--max-filesize', process.env.DOWNLOAD_MAX_SIZE || '150M',
           '-f', 'bv*[height<=1440]+ba/b[height<=1440]/bv*[height<=1080]+ba/b[height<=1080]/bv*[height<=720]+ba/b[height<=720]/b',
@@ -109,7 +124,7 @@ module.exports = {
         {
           video: buffer,
           mimetype: 'video/mp4',
-          caption: '✅ *SCARD-BOT Downloader*'
+          caption: '✅ *SUPER-BOT Downloader*'
         },
         { quoted: msg }
       )
@@ -119,7 +134,9 @@ module.exports = {
       const err = String(error.stderr || error.message || '').toLowerCase()
       let message = '❌ Video gagal didownload.'
 
-      if (err.includes('private') || err.includes('login')) {
+      if (err.includes('ytdlp_not_installed') || err.includes('enoent')) {
+        message = '❌ Downloader belum tersedia di VPS. Install yt-dlp lalu coba lagi.'
+      } else if (err.includes('private') || err.includes('login')) {
         message += '\n\nVideo mungkin private atau membutuhkan login.'
       } else if (err.includes('copyright') || err.includes('unavailable')) {
         message += '\n\nVideo mungkin sudah tidak tersedia.'
