@@ -84,7 +84,7 @@ module.exports = {
         [
           '--no-playlist',
           '--max-filesize', process.env.DOWNLOAD_MAX_SIZE || '60M',
-          '-f', 'bv*[height<=720]+ba/b[height<=720]/b',
+          '-f', 'bv*[height<=1440]+ba/b[height<=1440]/bv*[height<=1080]+ba/b[height<=1080]/bv*[height<=720]+ba/b[height<=720]/b',
           '--merge-output-format', 'mp4',
           '-o', output,
           url
