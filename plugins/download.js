@@ -98,6 +98,8 @@ module.exports = {
         [
           ...ytdlp.prefix,
           '--no-playlist',
+          '--impersonate', process.env.YTDLP_IMPERSONATE || 'chrome',
+          '--user-agent', process.env.YTDLP_USER_AGENT || 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140.0.0.0 Safari/537.36',
           '--max-filesize', process.env.DOWNLOAD_MAX_SIZE || '150M',
           '-f', 'bv*[height<=1440]+ba/b[height<=1440]/bv*[height<=1080]+ba/b[height<=1080]/bv*[height<=720]+ba/b[height<=720]/b',
           '--merge-output-format', 'mp4',
@@ -136,6 +138,8 @@ module.exports = {
 
       if (err.includes('ytdlp_not_installed') || err.includes('enoent')) {
         message = '❌ Downloader belum tersedia di VPS. Install yt-dlp lalu coba lagi.'
+      } else if (err.includes('no impersonate target') || err.includes('impersonation')) {
+        message = '❌ TikTok membutuhkan dependency impersonation di VPS.'
       } else if (err.includes('private') || err.includes('login')) {
         message += '\n\nVideo mungkin private atau membutuhkan login.'
       } else if (err.includes('copyright') || err.includes('unavailable')) {
