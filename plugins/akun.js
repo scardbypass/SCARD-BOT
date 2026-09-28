@@ -1,7 +1,6 @@
 const db=require('../lib/database')
 const {formatRupiah}=require('../lib/utils')
-const {getRoamerAccount,roamerBalance,getSickwBalance}=require('../lib/providers')
-const {waitAirbotBalance}=require('./saldoceir')
+const {getRoamerAccount,roamerBalance,getSickwBalance,getAirbotBalance}=require('../lib/providers')
 
 function line(label,value){return `│ ${String(label).padEnd(12,' ')} : ${value}`}
 
@@ -24,17 +23,10 @@ module.exports={
       ].join('\n'))
     }
 
-    const groupId=String(process.env.AIRBOT_GROUP_ID||'').trim()
-    let airbotPromise=Promise.resolve(null)
-    if(groupId){
-      airbotPromise=waitAirbotBalance(sock,groupId)
-      await sock.sendMessage(groupId,{text:process.env.AIRBOT_BALANCE_COMMAND||'/api saldo'}).catch(e=>console.error('[AKUN AIRBOT]',e.message))
-    }
-
     const [roamer,sickw,airbot]=await Promise.all([
       getRoamerAccount(),
       getSickwBalance(),
-      airbotPromise
+      getAirbotBalance()
     ])
     const rb=roamerBalance(roamer)
 
@@ -46,7 +38,7 @@ module.exports={
       '├──────────────────',
       '│ *PROVIDER BALANCE*',
       line('RoamerCheck',rb===null?'Tidak terhubung':formatRupiah(rb)),
-      line('AirBot',airbot===null?'Tidak terhubung':formatRupiah(airbot)),
+      line('AirBot',airbot===null?'Tidak terhubung':formatRupiah(airbot.balance)),
       line('SickW',sickw===null?'Tidak terhubung':`${formatRupiah(sickw.idr)} ($${sickw.usd.toFixed(3)})`),
       '╰──────────────────',
       '_System account connected._'
