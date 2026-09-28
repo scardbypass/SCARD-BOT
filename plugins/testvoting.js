@@ -13,7 +13,7 @@ module.exports={
     console.log('[TESTVOTING] requested','fromMe=',!!msg.key.fromMe,'owner=',!!isOwner,'target=',jid||'-');
     if(!jid)return reply('❌ VOTING_GROUP_ID belum diatur di .env');
     try{
-      const sent=await sendPoll(sock,'Senin');
+      const sent=await sendPoll(sock,'Senin',{probe:true});
       console.log('[TESTVOTING] success',sent?.key?.id||'OK');
       return reply('✅ Voting test terkirim ke grup.\n\nPilihan: Gas / Izin');
     }catch(e){
