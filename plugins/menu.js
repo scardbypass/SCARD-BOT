@@ -30,9 +30,9 @@ module.exports = {
       const interval = Number(process.env.MONITOR_INTERVAL_MINUTES || 30)
       lines.push(
         '  /monitor                 Uptime monitor', '',
-        '*CEIR*', '  /saldoceir               Provider balance', '  /airbot                  Deposit request', '  /ceir deposit            Confirm deposit', '',
+        '*CEIR*', '  saldoceir                Provider balance', '  airbot <nominal>         Deposit + QRIS', '  depoapi                  Confirm API topup', '',
         '*INTELLIGENCE*', '  /aion                    Enable Gemini', '  /aioff                   Disable Gemini', '  /aistatus                AI status', '',
-        '*SYSTEM*', '  /backup                   Create backup', '',
+        '*SYSTEM*', '  testvoting               Send test poll', '  /backup                   Create backup', '',
         '━━━━━━━━━━━━━━━━━━━━━━━━', '*SYSTEM STATUS*', '',
         'Bot          ONLINE',
         'Gemini       ' + (ai ? 'ACTIVE' : 'OFF'),
