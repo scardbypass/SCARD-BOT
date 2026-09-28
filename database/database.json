@@ -1,0 +1,16 @@
+{
+  "users": {
+    "6282132687740": {
+      "username": "OWNER",
+      "phone": "6282132687740",
+      "balance": 0,
+      "role": "owner",
+      "registeredAt": "2026-09-28T00:00:00+07:00"
+    }
+  },
+  "transactions": [],
+  "settings": {},
+  "scheduler": {
+    "sent": {}
+  }
+}
