@@ -3,50 +3,47 @@ const { formatRupiah } = require('../lib/utils')
 const { getRoamerAccount, roamerBalance, getSickwBalance } = require('../lib/providers')
 
 function level(role) { return String(role || 'member').toUpperCase() }
+function row(label,value){return '  '+String(label).padEnd(16,' ')+' : '+value}
 
 module.exports = {
   commands: ['akun', 'profil'],
   registered: true,
-  menu: '/akun',
+  menu: 'akun',
   async run({ reply, user, isOwner, phone }) {
-    const username = user?.username || (isOwner ? 'SCARD' : 'Member')
-    const accountPhone = user?.phone || phone
+    const accountPhone = user?.phone || phone || String(process.env.OWNER_NUMBER||'').replace(/\D/g,'')
     if (!isOwner) {
       return reply([
-        '*S C A R D*', '_MEMBER ACCOUNT_', '━━━━━━━━━━━━━━━━━━━━━━━━', '',
-        '*' + username + '*', 'Member Account', '',
+        '*MEMBER ACCOUNT*','━━━━━━━━━━━━━━━━━━━━━━━━','',
         '*ACCOUNT*',
-        '  Username        ' + username,
-        '  WhatsApp        ' + accountPhone,
-        '  Level           ' + level(user?.role), '',
-        '*BALANCE*',
-        '  Available       ' + formatRupiah(user?.balance || 0),
-        '  Transactions    ' + db.countTransactions(phone), '',
-        '━━━━━━━━━━━━━━━━━━━━━━━━', '*SCARD-BOT*  /  MEMBER', '_Account connected successfully._'
+        row('WhatsApp', accountPhone || '-'),
+        row('Level', level(user?.role)),
+        row('Balance', formatRupiah(user?.balance || 0)),
+        row('Transactions', db.countTransactions(phone || accountPhone)),
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━',
+        '*SUPER-BOT*  /  MEMBER',
+        '_System account connected._'
       ].join('\n'))
     }
+
     const [roamer, sickw] = await Promise.all([getRoamerAccount(), getSickwBalance()])
     const rb = roamerBalance(roamer)
-    const pricing = roamer?.pricing || {}
     const sickwBalance = sickw === null ? 'Unavailable' : formatRupiah(sickw.idr) + ' ($' + sickw.usd.toFixed(3) + ')'
+
     return reply([
-      '*S C A R D*', '_OWNER ACCOUNT_', '━━━━━━━━━━━━━━━━━━━━━━━━', '',
-      '*' + username + '*', 'Owner Account', '',
+      '*OWNER ACCOUNT*','━━━━━━━━━━━━━━━━━━━━━━━━','',
       '*ACCOUNT*',
-      '  WhatsApp        ' + accountPhone,
-      '  Level           OWNER',
-      '  Members         ' + db.totalUsers(),
-      '  Member Balance  ' + formatRupiah(db.totalBalance()), '',
+      row('WhatsApp', accountPhone || '-'),
+      row('Level', 'OWNER'),
+      row('Members', db.totalUsers()),
+      '',
       '*PROVIDER BALANCE*',
-      '  RoamerCheck     ' + (rb === null ? 'Unavailable' : formatRupiah(rb)),
-      '  SickW           ' + sickwBalance, '',
-      '*ROAMERCHECK PRICE*',
-      '  Status          ' + formatRupiah(pricing.status || 0),
-      '  History         ' + formatRupiah(pricing.history || 0),
-      '  Digipos         ' + formatRupiah(pricing.digipos || 0),
-      '  Cek SF          ' + formatRupiah(pricing.sf || 0),
-      '  Barcode         ' + formatRupiah(pricing.genbarcode || 2000), '',
-      '━━━━━━━━━━━━━━━━━━━━━━━━', '*SCARD-BOT*  /  OWNER', '_System account connected._'
+      row('RoamerCheck', rb === null ? 'Unavailable' : formatRupiah(rb)),
+      row('SickW', sickwBalance),
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━',
+      '*SUPER-BOT*  /  OWNER',
+      '_System account connected._'
     ].join('\n'))
   }
 }
