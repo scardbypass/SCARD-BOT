@@ -1,48 +1,54 @@
-const db = require('../lib/database')
-const { formatRupiah } = require('../lib/utils')
-const { getRoamerAccount, roamerBalance, getSickwBalance } = require('../lib/providers')
+const db=require('../lib/database')
+const {formatRupiah}=require('../lib/utils')
+const {getRoamerAccount,roamerBalance,getSickwBalance}=require('../lib/providers')
+const {waitAirbotBalance}=require('./saldoceir')
 
-function level(role) { return String(role || 'member').toUpperCase() }
-function row(label,value){return '  '+String(label).padEnd(16,' ')+' : '+value}
+function line(label,value){return `│ ${String(label).padEnd(12,' ')} : ${value}`}
 
-module.exports = {
-  commands: ['akun', 'profil'],
-  registered: true,
-  menu: 'akun',
-  async run({ reply, user, isOwner, phone }) {
-    const accountPhone = user?.phone || phone || String(process.env.OWNER_NUMBER||'').replace(/\D/g,'')
-    if (!isOwner) {
+module.exports={
+  commands:['akun','profil'],
+  registered:true,
+  menu:'akun',
+  async run({sock,msg,reply,user,isOwner,phone}){
+    const accountPhone=user?.phone||phone||String(process.env.OWNER_NUMBER||'').replace(/\D/g,'')
+
+    if(!isOwner){
       return reply([
-        '*MEMBER ACCOUNT*','━━━━━━━━━━━━━━━━━━━━━━━━','',
-        '*ACCOUNT*',
-        row('WhatsApp', accountPhone || '-'),
-        row('Level', level(user?.role)),
-        row('Balance', formatRupiah(user?.balance || 0)),
-        row('Transactions', db.countTransactions(phone || accountPhone)),
-        '',
-        '━━━━━━━━━━━━━━━━━━━━━━━━',
-        '*SUPER-BOT*  /  MEMBER',
-        '_System account connected._'
+        '╭─ *SUPER-BOT ACCOUNT*',
+        line('WhatsApp',accountPhone||'-'),
+        line('Level',String(user?.role||'MEMBER').toUpperCase()),
+        line('Saldo',formatRupiah(user?.balance||0)),
+        line('Transaksi',db.countTransactions(phone||accountPhone)),
+        '╰──────────────────',
+        '_Account connected._'
       ].join('\n'))
     }
 
-    const [roamer, sickw] = await Promise.all([getRoamerAccount(), getSickwBalance()])
-    const rb = roamerBalance(roamer)
-    const sickwBalance = sickw === null ? 'Unavailable' : formatRupiah(sickw.idr) + ' ($' + sickw.usd.toFixed(3) + ')'
+    const groupId=String(process.env.AIRBOT_GROUP_ID||'').trim()
+    let airbotPromise=Promise.resolve(null)
+    if(groupId){
+      airbotPromise=waitAirbotBalance(sock,groupId)
+      await sock.sendMessage(groupId,{text:process.env.AIRBOT_BALANCE_COMMAND||'/api saldo'}).catch(e=>console.error('[AKUN AIRBOT]',e.message))
+    }
+
+    const [roamer,sickw,airbot]=await Promise.all([
+      getRoamerAccount(),
+      getSickwBalance(),
+      airbotPromise
+    ])
+    const rb=roamerBalance(roamer)
 
     return reply([
-      '*OWNER ACCOUNT*','━━━━━━━━━━━━━━━━━━━━━━━━','',
-      '*ACCOUNT*',
-      row('WhatsApp', accountPhone || '-'),
-      row('Level', 'OWNER'),
-      row('Members', db.totalUsers()),
-      '',
-      '*PROVIDER BALANCE*',
-      row('RoamerCheck', rb === null ? 'Unavailable' : formatRupiah(rb)),
-      row('SickW', sickwBalance),
-      '',
-      '━━━━━━━━━━━━━━━━━━━━━━━━',
-      '*SUPER-BOT*  /  OWNER',
+      '╭─ *SUPER-BOT • OWNER*',
+      line('WhatsApp',accountPhone||'-'),
+      line('Level','OWNER'),
+      line('Members',db.totalUsers()),
+      '├──────────────────',
+      '│ *PROVIDER BALANCE*',
+      line('RoamerCheck',rb===null?'Tidak terhubung':formatRupiah(rb)),
+      line('AirBot',airbot===null?'Tidak terhubung':formatRupiah(airbot)),
+      line('SickW',sickw===null?'Tidak terhubung':`${formatRupiah(sickw.idr)} ($${sickw.usd.toFixed(3)})`),
+      '╰──────────────────',
       '_System account connected._'
     ].join('\n'))
   }
