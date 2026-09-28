@@ -67,7 +67,8 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 | `/aistatus` | 👑 OWNER | Status Gemini |
 | `/saldoceir` | 👑 OWNER | Saldo provider |
 | `/airbot <nominal>` | 👑 OWNER | Request deposit AirBot |
-| `/ceir deposit` | 👑 OWNER | Konfirmasi topup CEIR |
+| `depoapi` | 👑 OWNER | Konfirmasi topup CEIR setelah request AirBot |
+| `testvoting` | 👑 OWNER | Kirim polling test tanpa mengubah jadwal otomatis |
 | `/monitor add <domain>` | 👑 OWNER | Tambah website monitor |
 | `/monitor del <domain>` | 👑 OWNER | Hapus website monitor |
 | `/monitor list` | 👑 OWNER | Daftar website monitor |
@@ -176,6 +177,7 @@ TIMEZONE=Asia/Jakarta
 AIRBOT_GROUP_ID=120xxxxxxxxxxxxxxxx@g.us
 AIRBOT_TIMEOUT_MS=15000
 AIRBOT_BALANCE_COMMAND=/api saldo
+AIRBOT_QR_DELETE_MINUTES=10
 
 # Voting badminton
 VOTING_GROUP_ID=120xxxxxxxxxxxxxxxx@g.us
@@ -492,6 +494,7 @@ SCARD-BOT/
 ├── database/
 │   └── database.json
 ├── lib/
+│   ├── airbotBridge.js
 │   ├── database.js
 │   ├── gemini.js
 │   ├── pluginLoader.js
@@ -513,6 +516,7 @@ SCARD-BOT/
 │   ├── saldoceir.js
 │   ├── statusweb.js
 │   ├── stiker.js
+│   ├── testvoting.js
 │   └── whois.js
 └── sessions/
 ```
