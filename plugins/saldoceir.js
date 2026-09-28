@@ -43,6 +43,8 @@ function waitAirbotBalance(sock, groupId) {
 }
 
 module.exports = {
+  parseAirbotBalance,
+  waitAirbotBalance,
   commands: ['saldoceir'],
   registered: true,
   ownerOnly: true,
