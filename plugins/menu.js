@@ -1,0 +1,2 @@
+const {loadPlugins}=require('../lib/pluginLoader');
+module.exports={commands:['menu','help'],registered:true,async run({reply,isOwner}){const plugins=loadPlugins();const rows=[];for(const p of plugins){if(!p.menu)continue;if(p.ownerOnly&&!isOwner)continue;rows.push(p.menu)}let t='📱 *SCARD-BOT*\n\n'+[...new Set(rows)].join('\n');if(isOwner)t+='\n\n🤖 AI chat: /aion • /aioff';return reply(t)}}
