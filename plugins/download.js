@@ -83,7 +83,7 @@ module.exports = {
         process.env.YTDLP_PATH || 'yt-dlp',
         [
           '--no-playlist',
-          '--max-filesize', process.env.DOWNLOAD_MAX_SIZE || '60M',
+          '--max-filesize', process.env.DOWNLOAD_MAX_SIZE || '150M',
           '-f', 'bv*[height<=1440]+ba/b[height<=1440]/bv*[height<=1080]+ba/b[height<=1080]/bv*[height<=720]+ba/b[height<=720]/b',
           '--merge-output-format', 'mp4',
           '-o', output,
@@ -96,7 +96,7 @@ module.exports = {
       if (!downloadedFile) throw new Error('File hasil download tidak ditemukan')
 
       const stat = await fs.promises.stat(downloadedFile)
-      const maxBytes = Number(process.env.DOWNLOAD_MAX_BYTES || 60 * 1024 * 1024)
+      const maxBytes = Number(process.env.DOWNLOAD_MAX_BYTES || 150 * 1024 * 1024)
 
       if (stat.size > maxBytes) {
         return reply('❌ Video terlalu besar untuk dikirim melalui bot.')
