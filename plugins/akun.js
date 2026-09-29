@@ -31,17 +31,26 @@ module.exports={
     const rb=roamerBalance(roamer)
 
     return reply([
-      '╭─ *SUPER-BOT • OWNER*',
-      line('WhatsApp',accountPhone||'-'),
-      line('Level','OWNER'),
-      line('Members',db.totalUsers()),
-      '├──────────────────',
-      '│ *PROVIDER BALANCE*',
-      line('RoamerCheck',rb===null?'Tidak terhubung':formatRupiah(rb)),
-      line('AirBot',airbot===null?'Tidak terhubung':formatRupiah(airbot.balance)),
-      line('SickW',sickw===null?'Tidak terhubung':`${formatRupiah(sickw.idr)} ($${sickw.usd.toFixed(3)})`),
-      '╰──────────────────',
-      '_System account connected._'
+      '╭───〔 *SUPER-BOT ACCOUNT* 〕',
+      '│',
+      `│ 👤 *OWNER PROFILE*`,
+      `│  • WhatsApp : ${accountPhone||'-'}`,
+      `│  • Level    : OWNER`,
+      `│  • Members  : ${db.totalUsers()}`,
+      '│',
+      '├───〔 *PROVIDER BALANCE* 〕',
+      '│',
+      `│ 💳 RoamerCheck`,
+      `│    ${rb===null?'Tidak terhubung':formatRupiah(rb)}`,
+      '│',
+      `│ 💰 AirBot`,
+      `│    ${airbot===null?'Tidak terhubung':formatRupiah(airbot.balance)}`,
+      '│',
+      `│ 🌐 SickW`,
+      `│    ${sickw===null?'Tidak terhubung':`${formatRupiah(sickw.idr)}  •  ${sickw.usd.toFixed(3)}`}`,
+      '│',
+      '╰───〔 *CONNECTED* 〕',
+      '_SUPER-BOT • Account Center_'
     ].join('\n'))
   }
 }
