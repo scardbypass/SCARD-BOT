@@ -1,7 +1,7 @@
-const { loadPlugins } = require('../lib/pluginLoader')
-const db = require('../lib/database')
+const {loadPlugins}=require('../lib/pluginLoader')
+const db=require('../lib/database')
 
-function row(cmd,desc){return '  '+String(cmd).padEnd(20,' ')+' '+desc}
+function item(icon,cmd,desc){return `│ ${icon} *${cmd}*\n│    _${desc}_`}
 
 module.exports={
   commands:['menu','help'],
@@ -9,17 +9,21 @@ module.exports={
   async run({reply,isOwner}){
     const plugins=loadPlugins()
     const lines=[
-      '*SUPER-BOT*','_AUTOMATION SYSTEM_','━━━━━━━━━━━━━━━━━━━━━━━━','',
-      '*ACCOUNT*',
-      row('akun','Account profile'),
-      row('groupinfo','Group information'),'',
-      '*MEDIA*',
-      row('download','Video downloader'),
-      row('stiker','Create sticker'),
-      row('lihat','View media'),'',
-      '*WEB & DOMAIN*',
-      row('whois','Domain information'),
-      row('statusweb','Website health')
+      '╭───〔 *SUPER-BOT* 〕',
+      '│ _WhatsApp Automation Center_',
+      '│',
+      '├──〔 👤 *ACCOUNT* 〕',
+      item('◈','akun','Profil & saldo akun'),
+      item('◈','groupinfo','Informasi grup'),
+      '│',
+      '├──〔 🎬 *MEDIA TOOLS* 〕',
+      item('◈','download','TikTok • IG • FB • YouTube'),
+      item('◈','stiker','Buat stiker dari gambar'),
+      item('◈','lihat','Lihat media sekali lihat'),
+      '│',
+      '├──〔 🌐 *WEB & DOMAIN* 〕',
+      item('◈','whois','Informasi domain'),
+      item('◈','statusweb','Cek status website')
     ]
 
     if(isOwner){
@@ -28,28 +32,37 @@ module.exports={
       const voting=String(process.env.VOTING_ENABLED||'true').toLowerCase()==='true'
       const interval=Number(process.env.MONITOR_INTERVAL_MINUTES||60)
       lines.push(
-        row('monitor','Uptime monitor'),'',
-        '*CEIR*',
-        row('saldoceir','Provider balance'),
-        row('airbot <nominal>','Deposit + QRIS'),
-        row('depoapi','Confirm API topup'),'',
-        '*INTELLIGENCE*',
-        row('aion','Enable Gemini'),
-        row('aioff','Disable Gemini'),
-        row('aistatus','AI status'),'',
-        '*SYSTEM*',
-        row('backup','Create backup'),'',
-        '━━━━━━━━━━━━━━━━━━━━━━━━',
-        '*SYSTEM STATUS*',
-        row('Bot','ONLINE'),
-        row('Gemini',ai?'ACTIVE':'OFF'),
-        row('Monitor',monitors.length?'ACTIVE · '+interval+' MIN':'NO TARGET'),
-        row('Voting',voting?'ACTIVE':'OFF'),
-        row('Plugins',plugins.length)
+        item('◈','monitor','Kelola uptime monitor'),
+        '│',
+        '├──〔 💳 *CEIR & PROVIDER* 〕',
+        item('◈','saldoceir','Saldo semua provider'),
+        item('◈','airbot <nominal>','Buat deposit + QRIS'),
+        item('◈','depoapi','Konfirmasi topup API'),
+        '│',
+        '├──〔 ✨ *AI CENTER* 〕',
+        item('◈','aion','Aktifkan Gemini AI'),
+        item('◈','aioff','Nonaktifkan Gemini AI'),
+        item('◈','aistatus','Status Gemini AI'),
+        '│',
+        '├──〔 ⚙️ *SYSTEM* 〕',
+        item('◈','vps','Status resource VPS'),
+        item('◈','backup','Buat backup bot'),
+        '│',
+        '├──〔 📡 *LIVE STATUS* 〕',
+        `│ 🟢 Bot       *ONLINE*`,
+        `│ ${ai?'🟢':'⚪'} Gemini    *${ai?'ACTIVE':'OFF'}*`,
+        `│ ${monitors.length?'🟢':'⚪'} Monitor   *${monitors.length?`ACTIVE • ${interval} MIN`:'NO TARGET'}*`,
+        `│ ${voting?'🟢':'⚪'} Voting    *${voting?'ACTIVE':'OFF'}*`,
+        `│ 🧩 Plugins   *${plugins.length} LOADED*`
       )
     }
 
-    lines.push('','━━━━━━━━━━━━━━━━━━━━━━━━','*SUPER-BOT*  /  '+(isOwner?'OWNER':'MEMBER'),'_Simple tools. Serious automation._')
+    lines.push(
+      '│',
+      '╰────────────────────',
+      `   *SUPER-BOT* • ${isOwner?'OWNER':'MEMBER'}`,
+      '   _Simple tools. Serious automation._'
+    )
     return reply(lines.join('\n'))
   }
 }
