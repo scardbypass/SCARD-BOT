@@ -46,6 +46,7 @@ module.exports={
         '│',
         '├──〔 ⚙️ *SYSTEM* 〕',
         item('◈','vps','Status resource VPS'),
+        item('◈','clear','Bersihkan file temporary & download'),
         item('◈','logs','Lihat log PM2 terbaru'),
         item('◈','updatebot','Update bot dari GitHub'),
         item('◈','backup','Buat backup bot'),
