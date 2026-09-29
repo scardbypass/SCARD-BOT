@@ -1,6 +1,6 @@
 const db=require('../lib/database')
 const {formatRupiah}=require('../lib/utils')
-const {getRoamerAccount,roamerBalance,getSickwBalance,getAirbotBalance}=require('../lib/providers')
+const {getRoamerAccount,roamerBalance,getSickwBalance,getAirbotBalance,getEsimAccessBalance,getOrderKuotaBalance}=require('../lib/providers')
 
 function line(label,value){return `│ ${String(label).padEnd(12,' ')} : ${value}`}
 
@@ -23,10 +23,12 @@ module.exports={
       ].join('\n'))
     }
 
-    const [roamer,sickw,airbot]=await Promise.all([
+    const [roamer,sickw,airbot,esimAccess,orderKuota]=await Promise.all([
       getRoamerAccount(),
       getSickwBalance(),
-      getAirbotBalance()
+      getAirbotBalance(),
+      getEsimAccessBalance(),
+      getOrderKuotaBalance()
     ])
     const rb=roamerBalance(roamer)
 
@@ -48,6 +50,12 @@ module.exports={
       '│',
       `│ 🌐 SickW`,
       `│    ${sickw===null?'Tidak terhubung':`${formatRupiah(sickw.idr)}  •  ${sickw.usd.toFixed(3)}`}`,
+      '│',
+      `│ 📡 eSIMAccess`,
+      `│    ${esimAccess===null?'Tidak terhubung':`${formatRupiah(esimAccess.idr)}  •  ${esimAccess.usd.toFixed(3)}`}`,
+      '│',
+      `│ 🧾 Order Kuota`,
+      `│    ${orderKuota===null?'Tidak terhubung':formatRupiah(orderKuota.balance)}`,
       '│',
       '╰───〔 *CONNECTED* 〕',
       '_SUPER-BOT • Account Center_'
