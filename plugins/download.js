@@ -49,6 +49,36 @@ async function resolveYtDlp() {
   throw new Error('YTDLP_NOT_INSTALLED')
 }
 
+async function hasFfmpeg() {
+  try {
+    await execFileAsync('ffmpeg', ['-version'], { timeout: 5000 })
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function normalizeForWhatsApp(input, output) {
+  await execFileAsync('ffmpeg', [
+    '-y',
+    '-i', input,
+    '-map', '0:v:0',
+    '-map', '0:a:0?',
+    '-c:v', 'libx264',
+    '-preset', 'veryfast',
+    '-crf', '23',
+    '-pix_fmt', 'yuv420p',
+    '-profile:v', 'main',
+    '-level', '4.1',
+    '-c:a', 'aac',
+    '-b:a', '128k',
+    '-ar', '44100',
+    '-ac', '2',
+    '-movflags', '+faststart',
+    output
+  ], { timeout: Number(process.env.DOWNLOAD_TRANSCODE_TIMEOUT_MS || 300000) })
+}
+
 async function findDownloadedFile(dir, id) {
   const files = await fs.promises.readdir(dir)
   const file = files.find(name =>
@@ -102,7 +132,7 @@ module.exports = {
           '--impersonate', process.env.YTDLP_IMPERSONATE || 'chrome',
           '--user-agent', process.env.YTDLP_USER_AGENT || 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140.0.0.0 Safari/537.36',
           '--max-filesize', process.env.DOWNLOAD_MAX_SIZE || '150M',
-          '-f', 'bv*[height<=1440]+ba/b[height<=1440]/bv*[height<=1080]+ba/b[height<=1080]/bv*[height<=720]+ba/b[height<=720]/b',
+          '-f', 'bv*[vcodec^=avc1][height<=1440]+ba[acodec^=mp4a]/b[vcodec^=avc1][height<=1440]/bv*[height<=1080]+ba/b[height<=1080]/bv*[height<=720]+ba/b[height<=720]/b',
           '--merge-output-format', 'mp4',
           '-o', output,
           url
@@ -120,13 +150,34 @@ module.exports = {
         return reply('❌ Video terlalu besar untuk dikirim melalui bot.')
       }
 
-      const buffer = await fs.promises.readFile(downloadedFile)
+      let sendFile = downloadedFile
+      if (await hasFfmpeg()) {
+        const normalized = path.join(tempDir, id + '.whatsapp.mp4')
+        try {
+          console.log('[DOWNLOAD] normalizing video for WhatsApp compatibility')
+          await normalizeForWhatsApp(downloadedFile, normalized)
+          sendFile = normalized
+        } catch (e) {
+          console.error('[DOWNLOAD TRANSCODE]', e.stderr || e.message)
+          throw new Error('VIDEO_TRANSCODE_FAILED')
+        }
+      } else {
+        console.warn('[DOWNLOAD] ffmpeg tidak tersedia; mengirim file tanpa normalisasi codec')
+      }
+
+      const sendStat = await fs.promises.stat(sendFile)
+      if (sendStat.size > maxBytes) {
+        return reply('❌ Video hasil konversi terlalu besar untuk dikirim melalui bot.')
+      }
+
+      const buffer = await fs.promises.readFile(sendFile)
 
       await sock.sendMessage(
         msg.key.remoteJid,
         {
           video: buffer,
           mimetype: 'video/mp4',
+          fileName: 'SUPER-BOT.mp4',
           caption: '✅ *SUPER-BOT Downloader*'
         },
         { quoted: msg }
@@ -141,6 +192,8 @@ module.exports = {
         message = '❌ Downloader belum tersedia di VPS. Install yt-dlp lalu coba lagi.'
       } else if (err.includes('no impersonate target') || err.includes('impersonation')) {
         message = '❌ TikTok membutuhkan dependency impersonation di VPS.'
+      } else if (err.includes('video_transcode_failed')) {
+        message = '❌ Video berhasil didownload, tetapi gagal dikonversi ke format WhatsApp. Pastikan ffmpeg terinstall di VPS.'
       } else if (err.includes('private') || err.includes('login')) {
         message += '\n\nVideo mungkin private atau membutuhkan login.'
       } else if (err.includes('copyright') || err.includes('unavailable')) {
