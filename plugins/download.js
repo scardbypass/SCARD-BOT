@@ -58,6 +58,27 @@ async function hasFfmpeg() {
   }
 }
 
+async function probeWhatsAppCompatibility(input) {
+  try {
+    const { stdout } = await execFileAsync('ffprobe', [
+      '-v', 'error',
+      '-show_entries', 'stream=codec_type,codec_name,pix_fmt',
+      '-of', 'json',
+      input
+    ], { timeout: 10000 })
+    const data = JSON.parse(stdout || '{}')
+    const streams = Array.isArray(data.streams) ? data.streams : []
+    const video = streams.find(s => s.codec_type === 'video')
+    const audio = streams.find(s => s.codec_type === 'audio')
+    const videoOk = video?.codec_name === 'h264' && (!video.pix_fmt || video.pix_fmt === 'yuv420p')
+    const audioOk = !audio || audio.codec_name === 'aac'
+    return { compatible: !!videoOk && audioOk, video, audio }
+  } catch (e) {
+    console.warn('[DOWNLOAD] ffprobe gagal:', e.message)
+    return { compatible: false }
+  }
+}
+
 async function normalizeForWhatsApp(input, output) {
   await execFileAsync('ffmpeg', [
     '-y',
@@ -152,14 +173,19 @@ module.exports = {
 
       let sendFile = downloadedFile
       if (await hasFfmpeg()) {
-        const normalized = path.join(tempDir, id + '.whatsapp.mp4')
-        try {
-          console.log('[DOWNLOAD] normalizing video for WhatsApp compatibility')
-          await normalizeForWhatsApp(downloadedFile, normalized)
-          sendFile = normalized
-        } catch (e) {
-          console.error('[DOWNLOAD TRANSCODE]', e.stderr || e.message)
-          throw new Error('VIDEO_TRANSCODE_FAILED')
+        const probe = await probeWhatsAppCompatibility(downloadedFile)
+        if (probe.compatible) {
+          console.log('[DOWNLOAD] codec already WhatsApp compatible; skip transcoding')
+        } else {
+          const normalized = path.join(tempDir, id + '.whatsapp.mp4')
+          try {
+            console.log('[DOWNLOAD] incompatible codec; normalizing for WhatsApp')
+            await normalizeForWhatsApp(downloadedFile, normalized)
+            sendFile = normalized
+          } catch (e) {
+            console.error('[DOWNLOAD TRANSCODE]', e.stderr || e.message)
+            throw new Error('VIDEO_TRANSCODE_FAILED')
+          }
         }
       } else {
         console.warn('[DOWNLOAD] ffmpeg tidak tersedia; mengirim file tanpa normalisasi codec')
