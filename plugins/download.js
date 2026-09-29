@@ -27,6 +27,7 @@ function getUrl(text = '') {
     const allowed = [
       'tiktok.com', 'www.tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com',
       'instagram.com', 'www.instagram.com',
+      'facebook.com', 'www.facebook.com', 'm.facebook.com', 'web.facebook.com', 'fb.watch',
       'youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'
     ]
     if (!allowed.some(domain => host === domain || host.endsWith('.' + domain))) return null
@@ -62,14 +63,14 @@ module.exports = {
   commands: ['download', 'dl'],
   registered: false,
   menuSection: 'PUBLIC',
-  menu: '/download (reply link TikTok/IG/YouTube)',
+  menu: '/download (reply link TikTok/IG/FB/YouTube)',
 
   async run({ sock, msg, reply }) {
     const quotedText = getQuotedText(msg)
 
     if (!quotedText) {
       return reply(
-        '❌ Reply pesan yang berisi link TikTok, Instagram, atau YouTube.\n\n' +
+        '❌ Reply pesan yang berisi link TikTok, Instagram, Facebook, atau YouTube.\n\n' +
         '1. Kirim link video\n' +
         '2. Reply pesan link tersebut\n' +
         '3. Ketik /download'
@@ -78,7 +79,7 @@ module.exports = {
 
     const url = getUrl(quotedText)
     if (!url) {
-      return reply('❌ Link tidak ditemukan atau belum didukung.\n\nSupport: TikTok • Instagram • YouTube')
+      return reply('❌ Link tidak ditemukan atau belum didukung.\n\nSupport: TikTok • Instagram • Facebook • YouTube')
     }
 
     const tempDir = path.join(os.tmpdir(), 'scard-bot-downloads')
