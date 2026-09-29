@@ -42,7 +42,7 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 | 🚨 Website Monitor | Notifikasi hanya saat UP/DOWN berubah |
 | 💾 Backup | ZIP source + database tanpa secret/session |
 | 🏸 Auto Voting | Voting badminton terjadwal |
-| 💰 Provider Balance | RoamerCheck, SickW, AirBot |
+| 💰 Provider Balance | RoamerCheck, AirBot, SickW, eSIMAccess, Order Kuota/Okeconnect |
 | 🖼️ Sticker | Foto/video menjadi sticker |
 | 👁️ View Once | Mengambil ulang media View Once yang masih tersedia |
 
@@ -190,6 +190,17 @@ ROAMERCHECK_USERNAME=
 ROAMERCHECK_API_KEY=
 SICKW_API_KEY=
 SICKW_USD_TO_IDR=19500
+
+# eSIMAccess
+ESIMACCESS_ACCESS_CODE=
+ESIMACCESS_SECRET_KEY=
+ESIMACCESS_USD_TO_IDR=19500
+
+# Order Kuota / Okeconnect
+ORDERKUOTA_MEMBER_ID=
+ORDERKUOTA_PIN=
+ORDERKUOTA_PASSWORD=
+
 QCEIR_API_KEY=
 
 # Gemini
@@ -480,7 +491,9 @@ Command owner:
 /saldoceir
 ```
 
-mengambil saldo provider yang dikonfigurasi.
+mengambil saldo RoamerCheck, AirBot, SickW, eSIMAccess, dan Order Kuota/Okeconnect yang dikonfigurasi. Saldo USD dari SickW dan eSIMAccess juga ditampilkan sebagai estimasi IDR berdasarkan kurs di `.env`.
+
+Untuk eSIMAccess, `AccessCode` digunakan oleh endpoint cek saldo melalui header `RT-AccessCode`. `SecretKey` tetap disimpan di `.env` untuk endpoint eSIMAccess yang memerlukan HMAC signature; fitur cek saldo saat ini tidak mengirim SecretKey.
 
 ---
 
