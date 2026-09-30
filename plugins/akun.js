@@ -1,6 +1,7 @@
 const db=require('../lib/database')
 const {formatRupiah}=require('../lib/utils')
 const {getRoamerAccount,roamerBalance,getSickwBalance,getAirbotBalance,getEsimAccessBalance,getOrderKuotaBalance}=require('../lib/providers')
+const {isProviderEnabled}=require('../lib/providerSettings')
 
 function line(label,value){return `│ ${String(label).padEnd(12,' ')} : ${value}`}
 
@@ -24,13 +25,14 @@ module.exports={
     }
 
     const [roamer,sickw,airbot,esimAccess,orderKuota]=await Promise.all([
-      getRoamerAccount(),
-      getSickwBalance(),
-      getAirbotBalance(),
-      getEsimAccessBalance(),
-      getOrderKuotaBalance()
+      isProviderEnabled('roamercheck')?getRoamerAccount():null,
+      isProviderEnabled('sickw')?getSickwBalance():null,
+      isProviderEnabled('airbot')?getAirbotBalance():null,
+      isProviderEnabled('esimaccess')?getEsimAccessBalance():null,
+      isProviderEnabled('orderkuota')?getOrderKuotaBalance():null
     ])
     const rb=roamerBalance(roamer)
+    const show=(k,value)=>isProviderEnabled(k)?value:'⚫ OFF'
 
     return reply([
       '╭───〔 *SUPER-BOT ACCOUNT* 〕',
@@ -43,19 +45,19 @@ module.exports={
       '├───〔 *PROVIDER BALANCE* 〕',
       '│',
       `│ 💳 RoamerCheck`,
-      `│    ${rb===null?'Tidak terhubung':formatRupiah(rb)}`,
+      `│    ${show('roamercheck',rb===null?'Tidak terhubung':formatRupiah(rb))}`,
       '│',
       `│ 💰 AirBot`,
-      `│    ${airbot===null?'Tidak terhubung':formatRupiah(airbot.balance)}`,
+      `│    ${show('airbot',airbot===null?'Tidak terhubung':formatRupiah(airbot.balance))}`,
       '│',
       `│ 🌐 SickW`,
-      `│    ${sickw===null?'Tidak terhubung':`${formatRupiah(sickw.idr)}  •  ${sickw.usd.toFixed(3)}`}`,
+      `│    ${show('sickw',sickw===null?'Tidak terhubung':`${formatRupiah(sickw.idr)}  •  ${sickw.usd.toFixed(3)}`)}`,
       '│',
       `│ 📡 eSIMAccess`,
-      `│    ${esimAccess===null?'Tidak terhubung':`${formatRupiah(esimAccess.idr)}  •  ${esimAccess.usd.toFixed(3)}`}`,
+      `│    ${show('esimaccess',esimAccess===null?'Tidak terhubung':`${formatRupiah(esimAccess.idr)}  •  ${esimAccess.usd.toFixed(3)}`)}`,
       '│',
       `│ 🧾 Order Kuota`,
-      `│    ${orderKuota===null?'Tidak terhubung':formatRupiah(orderKuota.balance)}`,
+      `│    ${show('orderkuota',orderKuota===null?'Tidak terhubung':formatRupiah(orderKuota.balance))}`,
       '│',
       '╰───〔 *CONNECTED* 〕',
       '_SUPER-BOT • Account Center_'
