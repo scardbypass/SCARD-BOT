@@ -13,12 +13,13 @@ function makeDynamic(src,amount){
 }
 const rp=n=>'Rp'+Number(n).toLocaleString('id-ID')
 
-module.exports={commands:['qris'],registered:true,ownerOnly:false,menu:'/qris <nominal>',async run({sock,msg,reply,args}){
+module.exports={commands:['qris'],registered:false,ownerOnly:false,menu:'/qris <nominal>',async run({sock,msg,reply,args}){
  const amount=Number(String(args[0]||'').replace(/\D/g,''))
  const src=String(process.env.QRIS_STATIC||'').trim()
  if(!Number.isSafeInteger(amount)||amount<1)return reply('❌ Format: /qris 15000')
  if(!src)return reply('❌ QRIS_STATIC belum diisi di .env')
  try{
+  await reply('⏳ Sebentar, QRIS lagi dibuat...')
   const payload=makeDynamic(src,amount)
   const qr=await QRCode.toBuffer(payload,{width:720,margin:2,errorCorrectionLevel:'M'})
   const minutes=Math.max(1,Number(process.env.QRIS_DELETE_MINUTES||5))
