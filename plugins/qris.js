@@ -19,7 +19,7 @@ module.exports={commands:['qris'],registered:false,ownerOnly:false,menu:'/qris <
  if(!Number.isSafeInteger(amount)||amount<1)return reply('❌ Format: /qris 15000')
  if(!src)return reply('❌ QRIS_STATIC belum diisi di .env')
  try{
-  await reply(`⚡ *SCARD PAYMENT*\nSedang membuat QRIS *${rp(amount)}*...\nTunggu sebentar ya ✨`)
+  const loading=await sock.sendMessage(msg.key.remoteJid,{text:`⚡ *SCARD PAYMENT*\nSedang membuat QRIS *${rp(amount)}*...\nTunggu sebentar ya ✨`},{quoted:msg})
   const payload=makeDynamic(src,amount)
   const qr=await QRCode.toBuffer(payload,{width:720,margin:2,errorCorrectionLevel:'M'})
   const minutes=Math.max(1,Number(process.env.QRIS_DELETE_MINUTES||5))
@@ -28,6 +28,7 @@ module.exports={commands:['qris'],registered:false,ownerOnly:false,menu:'/qris <
   const svg=Buffer.from(`<svg width="1024" height="1450"><rect width="1024" height="1450" rx="38" fill="white"/><text x="512" y="130" text-anchor="middle" font-family="sans-serif" font-size="48" font-weight="700">QRIS PAYMENT</text><text x="512" y="205" text-anchor="middle" font-family="sans-serif" font-size="54" font-weight="700">SCARD-PROJECT</text><text x="512" y="275" text-anchor="middle" font-family="sans-serif" font-size="38">A01</text><rect x="122" y="345" width="780" height="780" rx="24" fill="#fff"/><text x="512" y="1210" text-anchor="middle" font-family="sans-serif" font-size="64" font-weight="700">${rp(amount)}</text><text x="512" y="1280" text-anchor="middle" font-family="sans-serif" font-size="32">Berlaku ${minutes} menit • sampai ${time} WIB</text><text x="512" y="1350" text-anchor="middle" font-family="sans-serif" font-size="28">Scan dengan aplikasi pembayaran QRIS</text></svg>`)
   const image=await sharp(svg).composite([{input:qr,left:152,top:375}]).png().toBuffer()
   const sent=await sock.sendMessage(msg.key.remoteJid,{image,caption:`💳 *QRIS PAYMENT*\n\n💰 Nominal : *${rp(amount)}*\n🏪 Merchant: SCARD-PROJECT\n⏳ Berlaku : ${minutes} menit\n🕐 Sampai  : ${time} WIB\n\n_Pesan QRIS akan ditarik otomatis setelah ${minutes} menit._`},{quoted:msg})
+  await sock.sendMessage(msg.key.remoteJid,{delete:loading.key}).catch(e=>console.error('[QRIS LOADING DELETE]',e?.message||e))
   setTimeout(()=>sock.sendMessage(msg.key.remoteJid,{delete:sent.key}).catch(e=>console.error('[QRIS DELETE]',e?.message||e)),minutes*60000)
  }catch(e){console.error('[QRIS]',e);return reply('❌ Gagal membuat QRIS: '+String(e?.message||e))}
 }}
