@@ -51,6 +51,7 @@ module.exports={
         item('◈','clear','Bersihkan file temporary & download'),
         item('◈','logs','Lihat log PM2 terbaru'),
         item('◈','updatebot','Update bot dari GitHub'),
+        item('◈','uploadgithub','Push perubahan VPS ke GitHub'),
         item('◈','cekupdate','Cek & update library npm/Baileys'),
         item('◈','backup','Buat backup bot'),
         '│',
