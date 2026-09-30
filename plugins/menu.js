@@ -38,6 +38,7 @@ module.exports={
         '│',
         '├──〔 💳 *CEIR & PROVIDER* 〕',
         item('◈','saldoceir','Saldo semua provider'),
+        item('◈','provider','ON/OFF provider secara manual'),
         item('◈','airbot <nominal>','Buat deposit + QRIS'),
         item('◈','depoapi','Konfirmasi topup API'),
         '│',
