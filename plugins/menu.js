@@ -56,6 +56,7 @@ module.exports={
         item('◈','promosiadd','Tambah penerima promosi'),
         item('◈','promosidel','Hapus penerima promosi'),
         item('◈','promosilist','Daftar penerima promosi'),
+        item('◈','nomergrup','Export nomor dari semua grup'),
         '│',
         '├──〔 📡 *LIVE STATUS* 〕',
         `│ 🟢 Bot       *ONLINE*`,
