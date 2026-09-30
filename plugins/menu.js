@@ -24,6 +24,7 @@ module.exports={
       '├──〔 🌐 *WEB & DOMAIN* 〕',
       item('◈','whois','Informasi domain'),
       item('◈','statusweb','Cek status website')
+    { command: 'importwa', description: 'Export database WA ke JSON' },
     ]
 
     if(isOwner){
