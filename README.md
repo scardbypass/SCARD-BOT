@@ -43,6 +43,7 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 | 💾 Backup | ZIP source + database tanpa secret/session |
 | 🏸 Auto Voting | Voting badminton terjadwal |
 | 💰 Provider Balance | RoamerCheck, AirBot, SickW, eSIMAccess, Order Kuota/Okeconnect |
+| 💳 QRIS Payment | Buat QRIS nominal dinamis dari QRIS merchant statis + auto-delete |
 | 🖼️ Sticker | Foto/video menjadi sticker |
 | 👁️ View Once | Mengambil ulang media View Once yang masih tersedia |
 
@@ -58,6 +59,7 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 | `/download`, `/dl` | 🌍 PUBLIC | Download video dengan reply link |
 | `/whois <domain>` | 🌍 PUBLIC | WHOIS/RDAP domain |
 | `/statusweb <domain>` | 🌍 PUBLIC | Cek HTTP + SSL website |
+| `/qris <nominal>` / `qris <nominal>` | 🌍 PUBLIC | Buat QRIS pembayaran sesuai nominal |
 | `/menu`, `/help` | 👤 REGISTERED | Menu bot |
 | `/akun`, `/profil` | 👤 REGISTERED | Profil akun |
 | `/groupinfo`, `/profilgrup` | 👤 REGISTERED | Informasi grup |
@@ -73,6 +75,7 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 | `/monitor del <domain>` | 👑 OWNER | Hapus website monitor |
 | `/monitor list` | 👑 OWNER | Daftar website monitor |
 | `/backup` | 👑 OWNER | Backup source + database |
+| `/qristxt on` / `/qristxt off` | 👑 OWNER | Hidup/matikan pesan proses pembuatan QRIS |
 
 ---
 
@@ -202,6 +205,11 @@ ORDERKUOTA_PIN=
 ORDERKUOTA_PASSWORD=
 
 QCEIR_API_KEY=
+
+# QRIS Payment
+# Isi payload QRIS statis merchant. Jangan commit QRIS/credential sensitif ke repo publik.
+QRIS_STATIC=
+QRIS_DELETE_MINUTES=5
 
 # Gemini
 GEMINI_API_KEY=
@@ -338,6 +346,43 @@ DOWNLOAD_MAX_BYTES=157286400
 ```
 
 Video disimpan sementara di direktori temp VPS, dikirim ke WhatsApp, kemudian file sementara dibersihkan.
+
+---
+
+# 💳 QRIS Payment
+
+Command QRIS bersifat **PUBLIC**, jadi dapat digunakan oleh pengguna yang belum terdaftar sekalipun. Prefix `/` bersifat opsional sesuai router bot.
+
+Contoh:
+
+```text
+qris 1000
+/qris 15000
+```
+
+Alurnya:
+
+1. User mengirim command beserta nominal.
+2. Jika pesan proses aktif, bot menampilkan **SCARD PAYMENT** selama QRIS dibuat.
+3. Bot mengubah payload QRIS statis menjadi QRIS dengan nominal transaksi dan membuat gambar QR.
+4. Setelah QRIS berhasil terkirim, pesan proses otomatis dihapus.
+5. Pesan gambar QRIS otomatis ditarik setelah waktu pada `QRIS_DELETE_MINUTES` (default 5 menit).
+
+Konfigurasi:
+
+```env
+QRIS_STATIC=PAYLOAD_QRIS_STATIS_MERCHANT
+QRIS_DELETE_MINUTES=5
+```
+
+Owner dapat mengatur pesan proses langsung dari WhatsApp:
+
+```text
+/qristxt off
+/qristxt on
+```
+
+Pengaturan `qristxt` disimpan di database sehingga tidak hilang saat bot direstart. Perlu dicatat, timer 5 menit mengatur **penghapusan pesan QRIS di WhatsApp**; ini bukan jaminan bahwa transaksi di sisi acquirer/payment provider kedaluwarsa setelah 5 menit.
 
 ---
 
@@ -526,6 +571,7 @@ SCARD-BOT/
 │   ├── lihat.js
 │   ├── menu.js
 │   ├── monitor.js
+│   ├── qris.js
 │   ├── saldoceir.js
 │   ├── statusweb.js
 │   ├── stiker.js
