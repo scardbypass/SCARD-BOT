@@ -32,9 +32,13 @@ module.exports={
     if(!subscribers.length)return reply('❌ Belum ada penerima promosi yang sudah disetujui. Tambahkan dengan /promosiadd 628xxx.')
     const payload=await promoPayload(msg,text)
     if(!payload)return reply('❌ Tulis pesan atau reply foto/video lalu ketik /promosi <caption>.')
-    await reply(`📣 Promosi dimulai ke *${subscribers.length}* penerima. Pengiriman dilakukan satu per satu.`)
+    const delay=Math.max(1000,Number(process.env.PROMO_DELAY_MS||10000))
+    const startedAt=new Date()
+    const estimatedAt=new Date(startedAt.getTime()+Math.max(0,subscribers.length-1)*delay)
+    const fmt=d=>new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(d).replace(' pukul ', ' • ')+' WIB'
+    const duration=ms=>{const s=Math.max(0,Math.floor(ms/1000)),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=s%60;return [h&&h+' jam',m&&m+' menit',x+' detik'].filter(Boolean).join(' ')}
+    await reply(`📣 *PROMOSI DIMULAI*\n\n👥 Penerima        : ${subscribers.length} nomor\n⏱️ Delay           : ${Math.round(delay/1000)} detik\n🕐 Mulai           : ${fmt(startedAt)}\n🏁 Estimasi selesai: ${fmt(estimatedAt)}\n📨 Mode            : Private Message\n\n⏳ Pesan sedang dikirim satu per satu...`)
     let ok=0,failed=0
-    const delay=Math.max(1000,Number(process.env.PROMO_DELAY_MS||5000))
     for(const phone of subscribers){
       try{
         await sock.sendMessage(phone+'@s.whatsapp.net',payload)
@@ -45,6 +49,6 @@ module.exports={
       }
       if(ok+failed<subscribers.length)await sleep(delay)
     }
-    return reply(`✅ *PROMOSI SELESAI*\n\n📨 Total: ${subscribers.length}\n✅ Berhasil: ${ok}\n❌ Gagal: ${failed}`)
+    const finishedAt=new Date()\n    return reply(`✅ *PROMOSI SELESAI*\n\n👥 Total     : ${subscribers.length}\n✅ Berhasil  : ${ok}\n❌ Gagal     : ${failed}\n\n🕐 Mulai     : ${fmt(startedAt)}\n🏁 Selesai   : ${fmt(finishedAt)}\n⏱️ Durasi    : ${duration(finishedAt-startedAt)}\n⏳ Delay     : ${Math.round(delay/1000)} detik/penerima`)
   }
 }
