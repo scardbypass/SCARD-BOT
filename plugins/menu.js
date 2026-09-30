@@ -25,6 +25,7 @@ module.exports={
       item('◈','whois','Informasi domain'),
       item('◈','statusweb','Cek status website')
     { command: 'importwa', description: 'Export database WA ke JSON' },
+    { command: 'getid', description: 'Lihat JID semua grup bot' },
     ]
 
     if(isOwner){
