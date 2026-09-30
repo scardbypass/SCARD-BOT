@@ -13,7 +13,7 @@ function makeDynamic(src,amount){
 }
 const rp=n=>'Rp'+Number(n).toLocaleString('id-ID')
 
-module.exports={commands:['qris'],registered:true,ownerOnly:true,menu:'/qris <nominal>',async run({sock,msg,reply,args}){
+module.exports={commands:['qris'],registered:true,ownerOnly:false,menu:'/qris <nominal>',async run({sock,msg,reply,args}){
  const amount=Number(String(args[0]||'').replace(/\D/g,''))
  const src=String(process.env.QRIS_STATIC||'').trim()
  if(!Number.isSafeInteger(amount)||amount<1)return reply('❌ Format: /qris 15000')
