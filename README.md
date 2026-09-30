@@ -2,7 +2,7 @@
 
 # 🤖 SCARD-BOT
 
-### Modular WhatsApp Automation Bot
+### V2 • Modular WhatsApp Automation Bot
 
 **Baileys • Gemini AI • Downloader • Website Monitor • Provider Tools • Automation**
 
@@ -11,7 +11,7 @@
 [![PM2](https://img.shields.io/badge/Process-PM2-2B037A?logo=pm2&logoColor=white)](https://pm2.keymetrics.io/)
 [![License](https://img.shields.io/badge/Project-SCARD--PROJECT-black)](#)
 
-**Simple • Fast • Modular • Automated**
+**Branch `v2` • Development fitur baru • `main` tetap production/stable**
 
 </div>
 
@@ -24,6 +24,8 @@
 Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini AI, downloader TikTok/Instagram/YouTube, website monitoring, backup, provider balance, sticker, View Once helper, dan automation voting.
 
 > [!IMPORTANT]
+> README ini untuk **branch `v2`**. Fitur V2 diuji di branch ini sebelum nantinya dipertimbangkan untuk masuk ke `main`.
+>
 > Gunakan bot dan fitur downloader hanya untuk konten yang memang boleh Anda akses/download. Jangan commit file `.env` atau folder `sessions/` ke repository.
 
 ---
@@ -43,6 +45,8 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 | 💾 Backup | ZIP source + database tanpa secret/session |
 | 🏸 Auto Voting | Voting badminton terjadwal |
 | 💰 Provider Balance | RoamerCheck, AirBot, SickW, eSIMAccess, Order Kuota/Okeconnect |
+| 📣 Promosi V2 | Kirim text/foto/video ke subscriber tersimpan, satu per satu dengan delay |
+| 📦 Export WA V2 | `/importwa` mengirim database subscriber sebagai JSON ke private owner |
 | 🖼️ Sticker | Foto/video menjadi sticker |
 | 👁️ View Once | Mengambil ulang media View Once yang masih tersedia |
 
@@ -73,6 +77,12 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 | `/monitor del <domain>` | 👑 OWNER | Hapus website monitor |
 | `/monitor list` | 👑 OWNER | Daftar website monitor |
 | `/backup` | 👑 OWNER | Backup source + database |
+| `/promosi <pesan>` | 👑 OWNER | Kirim promosi text atau reply foto/video ke subscriber |
+| `/promosiadd <nomor>` | 👑 OWNER | Tambah nomor subscriber promosi |
+| `/promosidel <nomor>` | 👑 OWNER | Hapus nomor subscriber promosi |
+| `/promosilist` | 👑 OWNER | Lihat daftar subscriber promosi |
+| `/importwa` | 👑 OWNER | Export subscriber ke `promo-subscribers.json` lewat private chat |
+| `/stop` | 🌍 PUBLIC | Berhenti menerima promosi |
 
 ---
 
@@ -217,6 +227,9 @@ DOWNLOAD_TIMEOUT_MS=180000
 # Website Monitor
 MONITOR_INTERVAL_MINUTES=30
 MONITOR_TIMEOUT_MS=12000
+
+# V2 Promotion
+PROMO_DELAY_MS=10000
 ```
 
 > [!WARNING]
@@ -497,6 +510,76 @@ Untuk eSIMAccess, `AccessCode` digunakan oleh endpoint cek saldo melalui header 
 
 ---
 
+# 📣 V2 — Promosi WhatsApp
+
+Fitur promosi V2 menggunakan daftar `promoSubscribers` yang tersimpan di database bot. Pengiriman dilakukan **satu per satu ke private chat** dan default memiliki jeda **10 detik per penerima**.
+
+### Kelola subscriber
+
+```text
+/promosiadd 628xxxxxxxxxx
+/promosidel 628xxxxxxxxxx
+/promosilist
+```
+
+Penerima dapat berhenti menggunakan:
+
+```text
+/stop
+```
+
+### Kirim text
+
+```text
+/promosi Promo spesial hari ini 🔥
+Diskon sampai 20%!
+```
+
+### Kirim foto atau video + text
+
+Reply foto/video yang ingin dikirim, kemudian jalankan:
+
+```text
+/promosi Promo spesial hari ini 🔥
+```
+
+Bot mempertahankan media dan menggunakan teks command/caption sebagai caption promosi.
+
+Saat dimulai, bot menampilkan jumlah penerima, delay, waktu mulai, dan estimasi selesai. Setelah seluruh pengiriman selesai, bot menampilkan total berhasil/gagal, waktu selesai, dan durasi aktual.
+
+Default delay:
+
+```env
+PROMO_DELAY_MS=10000
+```
+
+Nilai menggunakan milidetik; `10000` berarti 10 detik.
+
+## 📦 Export subscriber dengan /importwa
+
+Jalankan dari **private chat owner**:
+
+```text
+/importwa
+```
+
+Bot mengirim file `promo-subscribers.json` berisi nomor subscriber yang tersimpan, sudah dideduplikasi dan diurutkan. Contoh:
+
+```json
+{
+  "exportedAt": "2026-09-30T07:30:12.000Z",
+  "total": 2,
+  "numbers": [
+    "628123456789",
+    "628133456789"
+  ]
+}
+```
+
+`/importwa` bersifat **owner-only** dan harus dijalankan dari private chat bot.
+
+---
+
 # 📂 Struktur Project
 
 ```text
@@ -524,8 +607,11 @@ SCARD-BOT/
 │   ├── download.js
 │   ├── groupinfo.js
 │   ├── lihat.js
+│   ├── importwa.js
 │   ├── menu.js
 │   ├── monitor.js
+│   ├── promosi.js
+│   ├── promosiSubscriber.js
 │   ├── saldoceir.js
 │   ├── statusweb.js
 │   ├── stiker.js
@@ -568,11 +654,12 @@ module.exports = {
 
 ---
 
-# 🔄 Update SCARD-BOT
+# 🔄 Update SCARD-BOT V2
 
 ```bash
 cd /root/SCARD-BOT
-git pull origin main
+git checkout v2
+git pull origin v2
 npm install
 pm2 restart SCARD-BOT
 ```
