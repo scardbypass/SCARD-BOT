@@ -301,7 +301,7 @@ async function start() {
       if (!schedulerStarted) {
         schedulerStarted = true
 
-        startVotingScheduler(sock)
+        startVotingScheduler(() => activeSock)
         startWebsiteMonitor(sock)
       }
 
@@ -314,6 +314,10 @@ async function start() {
     // --------------------------------------------------------
 
     if (update.connection === 'close') {
+      if (activeSock === sock) {
+        activeSock = null
+      }
+
       const code = new Boom(
         update.lastDisconnect?.error
       )?.output?.statusCode
