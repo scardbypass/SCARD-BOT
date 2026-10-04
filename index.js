@@ -302,7 +302,7 @@ async function start() {
         schedulerStarted = true
 
         startVotingScheduler(() => activeSock)
-        startWebsiteMonitor(sock)
+        startWebsiteMonitor(() => activeSock)
       }
 
       // Saldo scheduler menggunakan socket aktif
