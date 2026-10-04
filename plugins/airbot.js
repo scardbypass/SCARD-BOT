@@ -8,15 +8,23 @@ module.exports={
   commands:['airbot','depoapi'],
   registered:true,
   ownerOnly:true,
-  menu:'airbot <nominal> • depoapi',
+  menu:'airbot <nominal|cancel> • depoapi',
   async run({sock,msg,reply,command,args,phone}){
     const group=process.env.AIRBOT_GROUP_ID;
     if(!group)return reply('❌ AIRBOT_GROUP_ID belum diatur di .env');
     if(msg.key.remoteJid?.endsWith('@g.us'))return reply('❌ Gunakan command ini di private chat.');
 
     if(command==='airbot'){
-      const n=nominal(args.join(' '));
-      if(!n)return reply('❌ Nominal tidak valid.\n\nContoh:\nairbot 100000');
+      const input=String(args.join(' ')||'').trim();
+
+      if(input.toLowerCase()==='cancel'){
+        await sock.sendMessage(group,{text:'/Deposit cancel'});
+        clearPending(phone);
+        return reply('✅ *Deposit AirBot Dibatalkan*\n\nPerintah dikirim ke grup:\n/Deposit cancel');
+      }
+
+      const n=nominal(input);
+      if(!n)return reply('❌ Nominal tidak valid.\n\nContoh:\nairbot 100000\n\nBatalkan deposit:\nairbot cancel');
       await sock.sendMessage(group,{text:`/deposit ${n}`});
       setPending(phone,{nominal:n,chat:msg.key.remoteJid,qrForwarded:false});
       return reply(`✅ *Request Deposit AirBot*\n\nNominal : ${formatRupiah(n)}\n\nPerintah dikirim ke grup:\n/deposit ${n}\n\nQRIS dari AirBot akan diteruskan ke chat ini dan otomatis dihapus setelah 10 menit.\n\nJika deposit sudah masuk, reply pesan ini dengan:\n*depoapi*`);
