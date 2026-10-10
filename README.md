@@ -101,6 +101,19 @@ Dari chat pribadi owner, tambahkan ID grup sebagai argumen terakhir, misalnya:
 
 > **Catatan:** Untuk banyak grup dengan jadwal bersamaan, pengiriman berjalan berurutan, bukan paralel. Materi website saat ini diambil ulang per pengiriman; belum ada cache bersama lintas grup. Pastikan bot sudah bergabung dalam grup tujuan. Jangan menggunakan `/ih add` di grup yang tidak ingin menerima ibadah otomatis.
 
+
+### Menambah owner dari chat pribadi
+
+Perintah khusus owner, dijalankan lewat chat pribadi SUPER-BOT (bukan di grup):
+
+```text
+/addowner 6281234567890
+/listowner
+/delowner 6281234567890
+```
+
+Nomor harus lengkap dalam format internasional 62. Nomor owner tambahan disimpan dalam database sebagai `settings.extraOwners`, sehingga tidak perlu mengubah `.env`. Owner utama dari `OWNER_NUMBER` tidak dapat dihapus dengan `/delowner`. Hanya owner terautentikasi dan akun WhatsApp bot sendiri yang dapat mengatur menu `/ih` (Ibadah Harian); anggota biasa tidak mendapat akses. Jangan menambahkan nomor pendek atau belum dikonfirmasi.
+
 ## Akses owner dan nomor tambahan
 
 Semua perintah `/ih` dilindungi `ownerOnly: true` di plugin, dan diverifikasi oleh core bot. Owner utama menggunakan `OWNER_NUMBER` pada `.env`; akun dengan `role: owner` dalam database juga dapat mengelola. **Jangan menambahkan nomor owner yang belum lengkap**. Nomor `628182727` belum dikonfirmasi sebagai nomor WhatsApp lengkap, sehingga tidak otomatis dimasukkan.
