@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🤖 SCARD-BOT
+# 🤖 SUPER-BOT
 
 ### Modular WhatsApp Automation Bot
 
@@ -17,9 +17,9 @@
 
 ---
 
-## 📖 Tentang SCARD-BOT
+## 📖 Tentang SUPER-BOT
 
-**SCARD-BOT** adalah bot WhatsApp modular berbasis Node.js + Baileys. Setiap fitur dipisahkan sebagai plugin sehingga fitur baru dapat ditambahkan tanpa membuat core bot berantakan.
+**SUPER-BOT** adalah bot WhatsApp modular berbasis Node.js + Baileys. Setiap fitur dipisahkan sebagai plugin sehingga fitur baru dapat ditambahkan tanpa membuat core bot berantakan.
 
 Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini AI, downloader TikTok/Instagram/YouTube, website monitoring, backup, provider balance, sticker, View Once helper, dan automation voting.
 
@@ -27,6 +27,98 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 > Gunakan bot dan fitur downloader hanya untuk konten yang memang boleh Anda akses/download. Jangan commit file `.env` atau folder `sessions/` ke repository.
 
 ---
+
+
+---
+
+# 🙏 Ibadah Harian Multi-Grup (SUPER-BOT)
+
+SUPER-BOT dapat mengirim teks Ibadah Harian otomatis dari **ibadahharian.net** ke banyak grup WhatsApp. Pesan menampilkan kredit distribusi **mdcjombang.id**, dengan opsi tag semua anggota memakai **Baileys `mentionAll: true`**. Semua pengaturan khusus **OWNER**; anggota biasa tidak dapat menjalankan perintah manajemen.
+
+## Memulai
+
+Grup utama lama `120363430536068297@g.us` tetap menjadi konfigurasi awal. Jadwal dan status lamanya dimigrasikan otomatis saat penyimpanan konfigurasi multi-grup pertama. Grup baru didaftarkan dalam keadaan **otomatis OFF**, sehingga tidak langsung mengirim tanpa persetujuan owner. Untuk grup baru, **tag @semua ON** dan **audio ON** secara default.
+
+Di dalam grup baru, owner mengirim:
+
+```text
+/ih add
+/ih status
+/ih jam pagi 06:00
+/ih jam siang 13:00
+/ih jam malam 19:00
+/ih on
+```
+
+Gunakan `/ih help` atau `/ibadahharian help` untuk bantuan. Semua jam menggunakan **Asia/Jakarta (WIB)**.
+
+## Daftar perintah lengkap
+
+| Perintah | Fungsi |
+|---|---|
+| `/ih help` | Menu Ibadah Harian |
+| `/ih grup` | Daftar semua grup dan jadwal |
+| `/ih add` | Tambah grup tempat perintah dikirim |
+| `/ih add 120xxx@g.us` | Tambah grup lewat ID (dari chat owner) |
+| `/ih del` | Hapus grup saat ini dari scheduler |
+| `/ih del 120xxx@g.us` | Hapus grup lewat ID |
+| `/ih status` | Status grup saat ini |
+| `/ih on` / `/ih off` | Hidup/matikan otomatis untuk grup |
+| `/ih pagi on/off` | Aktifkan/nonaktifkan sesi pagi |
+| `/ih siang on/off` | Aktifkan/nonaktifkan sesi siang |
+| `/ih malam on/off` | Aktifkan/nonaktifkan sesi malam |
+| `/ih jam pagi 05:00` | Jadwal pagi grup |
+| `/ih jam siang 12:00` | Jadwal siang grup |
+| `/ih jam malam 18:00` | Jadwal malam grup |
+| `/ih audio on/off` | Audio tambahan per grup |
+| `/ih tag on/off` | Tag @semua per grup |
+| `/ih test pagi` | Tes materi pagi ke grup |
+| `/ih test siang` | Tes materi siang ke grup |
+| `/ih test malam` | Tes materi malam ke grup |
+
+Dari chat pribadi owner, tambahkan ID grup sebagai argumen terakhir, misalnya:
+
+```text
+/ih status 120363430536068297@g.us
+/ih on 120363430536068297@g.us
+/ih jam malam 20:00 120363430536068297@g.us
+/ih audio off 120363430536068297@g.us
+/ih tag on 120363430536068297@g.us
+/ih test malam 120363430536068297@g.us
+```
+
+## Cara kerja
+
+1. Scheduler memeriksa waktu setiap 15 detik menggunakan WIB.
+2. Setiap grup punya `enabled`, pengaturan sesi dan waktu sendiri, `audioEnabled`, serta `tagEnabled`.
+3. Bot hanya mengirim pada grup dan sesi yang aktif sesuai waktu.
+4. Penanda terkirim menggunakan **ID grup + tanggal + sesi**, mencegah duplikasi terjadwal per grup.
+5. Materi diambil dari website saat pengiriman, lalu teks dikirim ke grup. Apabila terlalu panjang, pesan dibagi.
+6. Jika tag aktif, pesan teks terakhir berakhir dengan `@semua` dan metadata `mentionAll: true`; notifikasi bergantung pada dukungan WhatsApp serta hak admin grup.
+7. Jika audio aktif, bot mengunduh MP3 yang tersedia ke **RAM**, bukan menyimpan file permanen. Jika audio tidak ditemukan atau gagal, teks tetap terkirim.
+8. Audio website dapat berasal dari tahun arsip yang berbeda; **kesesuaian audio dengan teks hari ini tidak dijamin**. Matikan dengan `/ih audio off` bila perlu.
+9. Perintah `test` mengirim ulang secara manual, tidak menandai jadwal harian sebagai terkirim.
+
+> **Catatan:** Untuk banyak grup dengan jadwal bersamaan, pengiriman berjalan berurutan, bukan paralel. Materi website saat ini diambil ulang per pengiriman; belum ada cache bersama lintas grup. Pastikan bot sudah bergabung dalam grup tujuan. Jangan menggunakan `/ih add` di grup yang tidak ingin menerima ibadah otomatis.
+
+## Akses owner dan nomor tambahan
+
+Semua perintah `/ih` dilindungi `ownerOnly: true` di plugin, dan diverifikasi oleh core bot. Owner utama menggunakan `OWNER_NUMBER` pada `.env`; akun dengan `role: owner` dalam database juga dapat mengelola. **Jangan menambahkan nomor owner yang belum lengkap**. Nomor `628182727` belum dikonfirmasi sebagai nomor WhatsApp lengkap, sehingga tidak otomatis dimasukkan.
+
+## Update dan verifikasi
+
+```bash
+cd /root/SCARD-BOT
+git pull origin main
+node --check lib/ibadahScheduler.js
+node --check plugins/ibadahharian.js
+node --check plugins/menu.js
+pm2 restart SCARD-BOT --update-env
+pm2 logs SCARD-BOT --lines 50 --nostream
+```
+
+Setelah itu, jalankan `/ih grup`, `/ih status`, dan `/ih test malam` dari akun owner. Jika tidak muncul notifikasi @semua, pastikan akun bot admin grup dan WhatsApp mendukung mentionAll pada grup tersebut.
+
 
 ## ✨ Fitur Utama
 
@@ -136,12 +228,12 @@ sudo npm install -g pm2
 pm2 -v
 ```
 
-## 5. Clone SCARD-BOT
+## 5. Clone SUPER-BOT
 
 ```bash
 cd /root
-git clone https://github.com/scardbypass/SCARD-BOT.git
-cd SCARD-BOT
+git clone https://github.com/scardbypass/SUPER-BOT.git
+cd SUPER-BOT
 ```
 
 ## 6. Install dependency Node.js
@@ -164,7 +256,7 @@ nano .env
 Contoh konfigurasi:
 
 ```env
-BOT_NAME=SCARD-BOT
+BOT_NAME=SUPER-BOT
 PREFIX=/
 
 OWNER_NUMBER=628xxxxxxxxxx
@@ -214,7 +306,7 @@ QRIS_DELETE_MINUTES=5
 # Gemini
 GEMINI_API_KEY=
 GEMINI_MODEL=
-GEMINI_SYSTEM_PROMPT=Kamu adalah asisten WhatsApp SCARD-BOT.
+GEMINI_SYSTEM_PROMPT=Kamu adalah asisten WhatsApp SUPER-BOT.
 
 # Downloader
 YTDLP_PATH=yt-dlp
@@ -274,7 +366,7 @@ QR akan tampil di terminal. Buka WhatsApp → **Perangkat tertaut → Tautkan pe
 Stop bot dan hapus session lama:
 
 ```bash
-pm2 stop SCARD-BOT
+pm2 stop SUPER-BOT
 rm -rf sessions
 mkdir -p sessions
 npm start
@@ -287,8 +379,8 @@ Setelah berhasil login, hentikan proses foreground dengan <kbd>Ctrl</kbd> + <kbd
 # ♾️ Menjalankan 24/7 dengan PM2
 
 ```bash
-cd /root/SCARD-BOT
-pm2 start index.js --name SCARD-BOT
+cd /root/SUPER-BOT
+pm2 start index.js --name SUPER-BOT
 pm2 save
 pm2 startup
 ```
@@ -303,9 +395,9 @@ pm2 save
 
 ```bash
 pm2 status
-pm2 logs SCARD-BOT
-pm2 restart SCARD-BOT
-pm2 stop SCARD-BOT
+pm2 logs SUPER-BOT
+pm2 restart SUPER-BOT
+pm2 stop SUPER-BOT
 ```
 
 ---
@@ -512,7 +604,7 @@ Contoh request deposit:
 /airbot 100000
 ```
 
-SCARD-BOT mengirim:
+SUPER-BOT mengirim:
 
 ```text
 /deposit 100000
@@ -545,7 +637,7 @@ Untuk eSIMAccess, `AccessCode` digunakan oleh endpoint cek saldo melalui header 
 # 📂 Struktur Project
 
 ```text
-SCARD-BOT/
+SUPER-BOT/
 ├── index.js
 ├── package.json
 ├── .env.example
@@ -614,13 +706,13 @@ module.exports = {
 
 ---
 
-# 🔄 Update SCARD-BOT
+# 🔄 Update SUPER-BOT
 
 ```bash
-cd /root/SCARD-BOT
+cd /root/SUPER-BOT
 git pull origin main
 npm install
-pm2 restart SCARD-BOT
+pm2 restart SUPER-BOT
 ```
 
 `npm install` penting jika update membawa dependency baru.
@@ -635,7 +727,7 @@ pm2 restart SCARD-BOT
 Cek log:
 
 ```bash
-pm2 logs SCARD-BOT
+pm2 logs SUPER-BOT
 ```
 
 Pastikan command memang PUBLIC atau nomor sudah terdaftar. Command owner hanya bekerja untuk `OWNER_NUMBER` / role owner.
@@ -648,7 +740,7 @@ Pastikan command memang PUBLIC atau nomor sudah terdaftar. Command owner hanya b
 Jika ingin login ulang:
 
 ```bash
-pm2 stop SCARD-BOT
+pm2 stop SUPER-BOT
 rm -rf sessions
 mkdir -p sessions
 npm start
@@ -695,13 +787,13 @@ sudo apt install -y zip
 Restart:
 
 ```bash
-pm2 restart SCARD-BOT
+pm2 restart SUPER-BOT
 ```
 
 Jika PM2 mempertahankan environment lama, gunakan:
 
 ```bash
-pm2 restart SCARD-BOT --update-env
+pm2 restart SUPER-BOT --update-env
 ```
 
 </details>
@@ -721,7 +813,7 @@ pm2 restart SCARD-BOT --update-env
 
 <div align="center">
 
-### ⚡ SCARD-BOT
+### ⚡ SUPER-BOT
 
 Built for modular WhatsApp automation.
 
