@@ -2,3 +2,8 @@
 sessions/*
 !sessions/.gitkeep
 node_modules/
+
+# Runtime data (jangan pernah commit)
+database/runtime.json
+database/*.tmp
+package-lock.json
