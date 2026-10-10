@@ -6,6 +6,8 @@ const usage = [
   'Khusus owner SUPER-BOT.',
   '/ih help — menu lengkap',
   '/ih grup — daftar grup',
+  '/ih setup 05:00 12:00 18:00 — daftar + aktifkan sekaligus',
+  '/ih setup 06:00 off 19:00 — matikan sesi siang',
   '/ih add — daftar grup saat ini',
   '/ih add 120xxx@g.us — tambah via ID',
   '/ih del — hapus grup saat ini',
@@ -32,7 +34,7 @@ module.exports = {
   commands: ['ibadahharian', 'ih'],
   registered: true,
   ownerOnly: true,
-  menu: '/ih help | grup | add | del | status | on/off | jam | audio | tag | test',
+  menu: '/ih setup 05:00 12:00 18:00 | help | grup | add | del | status | on/off | jam | audio | tag | test',
   async run({ args = [], msg, reply }) {
     const [action = 'help', second, third, fourth] = args.map(v => String(v).toLowerCase())
     const chat = msg?.key?.remoteJid || ''
@@ -47,6 +49,25 @@ module.exports = {
         ' • Tag ' + (c.tagEnabled !== false ? 'ON' : 'OFF') +
         '\n   ' + Object.entries(c.sessions || {}).map(([n, v]) => n + ' ' + (v.enabled ? v.time : 'OFF')).join(' | ')
       ).join('\n'))
+    }
+    if (action === 'setup') {
+      if (!inGroup) return reply('❌ /ih setup hanya dapat dijalankan langsung di grup tujuan.')
+      const values = [second, third, fourth]
+      if (!values.every(v => v === 'off' || validTime(v || ''))) {
+        return reply('❌ Format: /ih setup 05:00 12:00 18:00\nUntuk menonaktifkan sesi: /ih setup 06:00 off 19:00')
+      }
+      if (!settings(chat)) addGroup(chat)
+      const next = settings(chat)
+      for (const [i, name] of Object.keys(DEFAULTS).entries()) {
+        next.sessions[name] = { enabled: values[i] !== 'off', time: values[i] === 'off' ? (next.sessions[name]?.time || DEFAULTS[name]) : values[i] }
+      }
+      next.enabled = true
+      next.audioEnabled = true
+      next.tagEnabled = true
+      save(next)
+      return reply(['✅ *IBADAH HARIAN AKTIF*', 'Grup: ' + chat,
+        ...Object.entries(next.sessions).map(([name, v]) => name.toUpperCase() + ': ' + (v.enabled ? v.time + ' WIB' : 'OFF')),
+        'Audio: ON', 'Tag @semua: ON', 'Otomatis: ON', 'Gunakan /ih status untuk melihat pengaturan.'].join('\n'))
     }
     if (action === 'add') {
       if (!target) return reply('❌ Jalankan di grup tujuan atau gunakan /ih add 120xxx@g.us')
