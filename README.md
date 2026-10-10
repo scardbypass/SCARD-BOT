@@ -35,7 +35,28 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 
 SUPER-BOT dapat mengirim teks Ibadah Harian otomatis dari **ibadahharian.net** ke banyak grup WhatsApp. Pesan menampilkan kredit distribusi **mdcjombang.id**, dengan opsi tag semua anggota memakai **Baileys `mentionAll: true`**. Semua pengaturan khusus **OWNER**; anggota biasa tidak dapat menjalankan perintah manajemen.
 
-## Setup super cepat (1–3 waktu)\n\nDari grup, owner dapat langsung mengetik:\n\n```text\n/ih set 18:00\n/ih set 12:00 18:00\n/ih set 05:00 12:00 18:00\n```\n\nSatu waktu berarti hanya **Malam**, dua waktu berarti **Siang dan Malam**, tiga waktu berarti **Pagi, Siang, Malam**. Perintah langsung mendaftarkan grup bila perlu, menyalakan pengiriman otomatis, audio dan tag @semua. Sesi lain dinonaktifkan. Semua waktu WIB. Untuk sesi lain atau OFF khusus, gunakan `/ih setup` atau `/ih jam` dan `/ih pagi|siang|malam on|off`.\n\n## Pengaturan satu sesi dengan satu perintah\n\nKetik langsung di grup dari akun owner:\n\n```text\n/ih pagi 05:00\n/ih siang 12:00\n/ih malam 18:00\n```\n\nMasing-masing perintah mendaftarkan grup jika perlu, mengaktifkan hanya sesi yang dipilih, mematikan dua sesi lainnya, serta menyalakan audio, tag @semua, dan pengiriman otomatis. Perintah lama `/ih pagi on/off` tetap dapat digunakan untuk menyalakan atau mematikan satu sesi tanpa mengubah sesi lain.\n\n## Setup cepat dalam satu perintah\n\nKetik langsung di grup dari akun owner:\n\n```text\n/ih setup 05:00 12:00 18:00\n```\n\nPerintah ini sekaligus mendaftarkan grup jika belum ada, mengatur jadwal pagi/siang/malam, mengaktifkan ketiga sesi, audio, tag @semua, dan pengiriman otomatis. Gunakan `off` untuk melewatkan sesi, misalnya `/ih setup 06:00 off 19:00`. Menjalankan ulang `setup` akan mengganti pengaturan sesi/audio/tag grup tersebut. Perintah setup tidak berlaku dari chat pribadi.\n\n## Memulai
+## Mulai cepat: Ibadah Harian di grup
+
+Jalankan **di dalam grup tujuan** menggunakan akun owner. Grup didaftarkan otomatis jika belum ada.
+
+| Perintah | Hasil |
+|---|---|
+| `/ih pagi 05:00` | Hanya Pagi ON, Siang/Malam OFF |
+| `/ih siang 12:00` | Hanya Siang ON, Pagi/Malam OFF |
+| `/ih malam 18:00` | Hanya Malam ON, Pagi/Siang OFF |
+| `/ih set 18:00` | Hanya Malam ON |
+| `/ih set 12:00 18:00` | Siang dan Malam ON |
+| `/ih set 05:00 12:00 18:00` | Semua sesi ON |
+| `/ih setup 05:00 12:00 18:00` | Atur tiga sesi sekaligus |
+| `/ih setup 06:00 off 19:00` | Pagi dan Malam ON, Siang OFF |
+
+Semua perintah cepat di atas mengaktifkan otomatis, audio, dan tag @semua. `/ih pagi on/off`, `/ih siang on/off`, dan `/ih malam on/off` hanya mengubah sesi masing-masing tanpa menonaktifkan sesi lainnya. Semua jam menggunakan **WIB (Asia/Jakarta)**.
+
+### Daftar grup yang mudah dibaca
+
+Ketik `/ih grup` atau `/ih list` untuk menampilkan **nama asli grup WhatsApp**, ID, status aktif/nonaktif, jam tiap sesi, status audio/tag, serta ringkasan jumlah grup. Nama diambil dari metadata WhatsApp saat diminta; bila metadata tidak tersedia, ID digunakan sebagai fallback.
+
+## Memulai
 
 Grup utama lama `120363430536068297@g.us` tetap menjadi konfigurasi awal. Jadwal dan status lamanya dimigrasikan otomatis saat penyimpanan konfigurasi multi-grup pertama. Grup baru didaftarkan dalam keadaan **otomatis OFF**, sehingga tidak langsung mengirim tanpa persetujuan owner. Untuk grup baru, **tag @semua ON** dan **audio ON** secara default.
 
@@ -835,19 +856,60 @@ Built for modular WhatsApp automation.
 </div>
 
 
-## Channel WhatsApp (Saluran) — eksperimental
+## 📢 Channel WhatsApp (Saluran) — eksperimental
 
-Jadikan akun SUPER-BOT admin Channel dengan izin memposting. Konfigurasi dilakukan **dari chat pribadi owner**, bukan lewat Channel. ID Channel harus berupa `123456@newsletter` (bukan link undangan). Contoh:
+Bot harus menjadi **admin Channel dengan izin memposting**. Konfigurasi hanya dari **chat pribadi owner**. ID Channel berformat angka diikuti `@newsletter`, **bukan** link Channel dan **bukan** ID grup `@g.us`.
+
+### Setup dan uji posting
 
 ```text
 /ihchannel add 123456@newsletter
 /ihchannel pagi 05:00 123456@newsletter
-/ihchannel setup 05:00 12:00 18:00 123456@newsletter
-/ihchannel status 123456@newsletter
 /ihchannel test pagi 123456@newsletter
-/ihchannel audio off 123456@newsletter
-/ihchannel off 123456@newsletter
-/ihchannel del 123456@newsletter
+/ihchannel status 123456@newsletter
 ```
 
-Jadwal Channel terpisah dari grup; `@semua` tidak dikirim ke Channel. Materi dan audio menggunakan sumber yang sama dengan grup. **Penting:** pengiriman Channel melalui `sock.sendMessage` bergantung dukungan Baileys rc14 serta izin akun. Sebelum mengandalkan jadwal otomatis, jalankan `/ihchannel test pagi ID` dan periksa bahwa posting benar-benar muncul di Channel. Jika gagal, periksa log `pm2 logs SCARD-BOT`; belum ada jaminan semua akun/versi Baileys mendukung newsletter posting.
+**Pastikan posting tes benar-benar muncul** sebelum mengandalkan jadwal otomatis. Dukungan `sock.sendMessage` untuk Channel bergantung pada versi Baileys dan hak akun. Jika tes gagal, lihat `pm2 logs SCARD-BOT --lines 100 --nostream`.
+
+### Perintah Channel lengkap
+
+| Perintah | Fungsi |
+|---|---|
+| `/ihchannel help` | Bantuan lengkap |
+| `/ihchannel list` | Daftar Channel terdaftar |
+| `/ihchannel add ID` | Daftarkan Channel, otomatis masih OFF |
+| `/ihchannel pagi 05:00 ID` | Hanya Pagi ON |
+| `/ihchannel siang 12:00 ID` | Hanya Siang ON |
+| `/ihchannel malam 18:00 ID` | Hanya Malam ON |
+| `/ihchannel setup 05:00 12:00 18:00 ID` | Ketiga sesi ON |
+| `/ihchannel setup off 12:00 18:00 ID` | Pagi OFF, Siang/Malam ON |
+| `/ihchannel status ID` | Status jadwal Channel |
+| `/ihchannel audio on ID` | Aktifkan audio |
+| `/ihchannel audio off ID` | Nonaktifkan audio |
+| `/ihchannel on ID` / `/ihchannel off ID` | Hidup/matikan otomatis |
+| `/ihchannel test pagi ID` | Tes posting manual |
+| `/ihchannel del ID` | Hapus Channel |
+
+Alias: `/ihch`. Ganti **ID** dengan JID asli, misalnya `123456@newsletter`. Setiap Channel punya jadwal terpisah dari grup. Channel tidak memakai tag `@semua`. Teks tetap dikirim jika audio tidak tersedia; sumber audio arsip dapat berbeda tahun dari materi teks.
+
+### Perbarui bot di VPS
+
+```bash
+cd /root/SCARD-BOT
+git pull origin main
+node --check plugins/menu.js
+node --check plugins/ibadahharian.js
+node --check plugins/ihchannel.js
+node --check lib/ibadahScheduler.js
+pm2 restart SCARD-BOT --update-env
+pm2 logs SCARD-BOT --lines 50 --nostream
+```
+
+### Verifikasi sesudah update
+
+1. Kirim `/menu` untuk melihat kategori Ibadah Harian Grup dan Channel.
+2. Kirim `/ih grup` untuk memastikan nama grup dan jadwal tampil.
+3. Di grup tujuan, kirim `/ih status` dan, bila diperlukan, `/ih test pagi`.
+4. Dari chat pribadi owner, kirim `/ihchannel list`, lalu `/ihchannel test pagi ID`.
+5. Bila posting Channel gagal, periksa izin admin, ID `@newsletter`, koneksi WhatsApp, dan log PM2. Jangan menganggap fitur Channel terverifikasi hanya karena jadwal tersimpan.
+
