@@ -6,6 +6,9 @@ const usage = [
   'Khusus owner SUPER-BOT.',
   '/ih help — menu lengkap',
   '/ih grup — daftar grup',
+  '/ih pagi 05:00 — aktifkan pagi saja',
+  '/ih siang 12:00 — aktifkan siang saja',
+  '/ih malam 18:00 — aktifkan malam saja',
   '/ih set 18:00 — aktifkan malam saja',
   '/ih set 12:00 18:00 — aktifkan siang dan malam',
   '/ih setup 05:00 12:00 18:00 — daftar + aktifkan sekaligus',
@@ -36,7 +39,7 @@ module.exports = {
   commands: ['ibadahharian', 'ih'],
   registered: true,
   ownerOnly: true,
-  menu: '/ih set 18:00 | set 12:00 18:00 | setup 05:00 12:00 18:00 | help | grup | add | del | status | on/off | jam | audio | tag | test',
+  menu: '/ih pagi 05:00 | siang 12:00 | malam 18:00 | set 18:00 | set 12:00 18:00 | setup 05:00 12:00 18:00 | help | grup | add | del | status | on/off | jam | audio | tag | test',
   async run({ args = [], msg, reply }) {
     const [action = 'help', second, third, fourth] = args.map(v => String(v).toLowerCase())
     const chat = msg?.key?.remoteJid || ''
@@ -51,6 +54,24 @@ module.exports = {
         ' • Tag ' + (c.tagEnabled !== false ? 'ON' : 'OFF') +
         '\n   ' + Object.entries(c.sessions || {}).map(([n, v]) => n + ' ' + (v.enabled ? v.time : 'OFF')).join(' | ')
       ).join('\n'))
+    }
+    if (DEFAULTS[action] && validTime(second || '') && !third) {
+      if (!inGroup) return reply('❌ Pengaturan cepat sesi hanya dapat dijalankan di grup tujuan.')
+      if (!settings(chat)) addGroup(chat)
+      const next = settings(chat)
+      for (const name of Object.keys(DEFAULTS)) {
+        next.sessions[name] = {
+          enabled: name === action,
+          time: name === action ? second : (next.sessions[name]?.time || DEFAULTS[name])
+        }
+      }
+      next.enabled = true
+      next.audioEnabled = true
+      next.tagEnabled = true
+      save(next)
+      return reply(['✅ *IBADAH HARIAN AKTIF*', 'Grup: ' + chat,
+        ...Object.entries(next.sessions).map(([name, v]) => name.toUpperCase() + ': ' + (v.enabled ? v.time + ' WIB' : 'OFF')),
+        'Audio: ON', 'Tag @semua: ON', 'Otomatis: ON'].join('\n'))
     }
     if (action === 'set') {
       if (!inGroup) return reply('❌ /ih set hanya dapat dijalankan langsung di grup tujuan.')
