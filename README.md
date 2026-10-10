@@ -35,7 +35,7 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 
 SUPER-BOT dapat mengirim teks Ibadah Harian otomatis dari **ibadahharian.net** ke banyak grup WhatsApp. Pesan menampilkan kredit distribusi **mdcjombang.id**, dengan opsi tag semua anggota memakai **Baileys `mentionAll: true`**. Semua pengaturan khusus **OWNER**; anggota biasa tidak dapat menjalankan perintah manajemen.
 
-## Memulai
+## Setup cepat dalam satu perintah\n\nKetik langsung di grup dari akun owner:\n\n```text\n/ih setup 05:00 12:00 18:00\n```\n\nPerintah ini sekaligus mendaftarkan grup jika belum ada, mengatur jadwal pagi/siang/malam, mengaktifkan ketiga sesi, audio, tag @semua, dan pengiriman otomatis. Gunakan `off` untuk melewatkan sesi, misalnya `/ih setup 06:00 off 19:00`. Menjalankan ulang `setup` akan mengganti pengaturan sesi/audio/tag grup tersebut. Perintah setup tidak berlaku dari chat pribadi.\n\n## Memulai
 
 Grup utama lama `120363430536068297@g.us` tetap menjadi konfigurasi awal. Jadwal dan status lamanya dimigrasikan otomatis saat penyimpanan konfigurasi multi-grup pertama. Grup baru didaftarkan dalam keadaan **otomatis OFF**, sehingga tidak langsung mengirim tanpa persetujuan owner. Untuk grup baru, **tag @semua ON** dan **audio ON** secara default.
 
