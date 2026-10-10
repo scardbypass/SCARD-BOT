@@ -61,21 +61,36 @@ module.exports = {
             console.warn('[IBADAH GROUP NAME]', id, error.message)
           }
         }
-        const sessions = cfg.sessions || {}
+        const sessionLine = (key, label) => {
+          const item = cfg.sessions?.[key]
+          return '    ' + label + '  ' + (item?.enabled ? item.time + ' WIB' : 'OFF')
+        }
         return [
-          (i + 1) + '. 📱 *' + name + '*',
-          '   ID: ' + id,
-          '   Status: ' + (cfg.enabled ? 'ON' : 'OFF'),
-          '   Audio: ' + (cfg.audioEnabled !== false ? 'ON' : 'OFF') +
-            ' | Tag @semua: ' + (cfg.tagEnabled !== false ? 'ON' : 'OFF'),
-          ...Object.entries(DEFAULTS).map(([key]) => {
-            const label = { pagi: '🌅 Pagi', siang: '☀️ Siang', malam: '🌙 Malam' }[key]
-            const value = sessions[key]
-            return '   ' + label + ': ' + (value?.enabled ? value.time + ' WIB' : 'OFF')
-          })
-        ].join('\\n')
+          String(i + 1).padStart(2, '0') + '. 📱 *' + String(name).replace(/[\r\n]+/g, ' ').trim() + '*',
+          '    ' + (cfg.enabled ? '🟢 Aktif' : '⚪ Nonaktif'),
+          '    🆔 ' + id,
+          '',
+          sessionLine('pagi', '🌅 Pagi '),
+          sessionLine('siang', '☀️ Siang'),
+          sessionLine('malam', '🌙 Malam'),
+          '',
+          '    🔊 Audio ' + (cfg.audioEnabled !== false ? 'ON' : 'OFF') +
+            '  •  📣 Tag ' + (cfg.tagEnabled !== false ? 'ON' : 'OFF')
+        ].join('\n')
       }))
-      return reply('🙏 *GRUP IBADAH HARIAN*\\n\\n' + (details.length ? details.join('\\n\\n') : 'Belum ada grup terdaftar.'))
+      const active = groups.filter(([, cfg]) => cfg.enabled).length
+      return reply([
+        '╭─ 🙏 *IBADAH HARIAN*',
+        '│  📋 *DAFTAR GRUP TERDAFTAR*',
+        '╰────────────────────',
+        '',
+        details.length ? details.join('\n\n────────────────────\n\n') : 'Belum ada grup terdaftar.',
+        '',
+        '────────────────────',
+        '📊 Total: ' + groups.length + ' grup',
+        '🟢 Aktif: ' + active + '  |  ⚪ Nonaktif: ' + (groups.length - active),
+        '🕒 Zona waktu: WIB'
+      ].join('\n'))
     }
     if (DEFAULTS[action] && validTime(second || '') && !third) {
       if (!inGroup) return reply('❌ Pengaturan cepat sesi hanya dapat dijalankan di grup tujuan.')
