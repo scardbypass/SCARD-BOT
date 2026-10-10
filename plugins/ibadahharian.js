@@ -6,6 +6,8 @@ const usage = [
   'Khusus owner SUPER-BOT.',
   '/ih help — menu lengkap',
   '/ih grup — daftar grup',
+  '/ih set 18:00 — aktifkan malam saja',
+  '/ih set 12:00 18:00 — aktifkan siang dan malam',
   '/ih setup 05:00 12:00 18:00 — daftar + aktifkan sekaligus',
   '/ih setup 06:00 off 19:00 — matikan sesi siang',
   '/ih add — daftar grup saat ini',
@@ -34,7 +36,7 @@ module.exports = {
   commands: ['ibadahharian', 'ih'],
   registered: true,
   ownerOnly: true,
-  menu: '/ih setup 05:00 12:00 18:00 | help | grup | add | del | status | on/off | jam | audio | tag | test',
+  menu: '/ih set 18:00 | set 12:00 18:00 | setup 05:00 12:00 18:00 | help | grup | add | del | status | on/off | jam | audio | tag | test',
   async run({ args = [], msg, reply }) {
     const [action = 'help', second, third, fourth] = args.map(v => String(v).toLowerCase())
     const chat = msg?.key?.remoteJid || ''
@@ -49,6 +51,27 @@ module.exports = {
         ' • Tag ' + (c.tagEnabled !== false ? 'ON' : 'OFF') +
         '\n   ' + Object.entries(c.sessions || {}).map(([n, v]) => n + ' ' + (v.enabled ? v.time : 'OFF')).join(' | ')
       ).join('\n'))
+    }
+    if (action === 'set') {
+      if (!inGroup) return reply('❌ /ih set hanya dapat dijalankan langsung di grup tujuan.')
+      const values = args.slice(1).map(v => String(v).toLowerCase())
+      if (values.length < 1 || values.length > 3 || !values.every(validTime)) {
+        return reply('❌ Gunakan /ih set 18:00 atau /ih set 12:00 18:00 atau /ih set 05:00 12:00 18:00')
+      }
+      if (!settings(chat)) addGroup(chat)
+      const next = settings(chat)
+      const sessions = values.length === 1 ? ['malam'] : values.length === 2 ? ['siang', 'malam'] : ['pagi', 'siang', 'malam']
+      for (const name of Object.keys(DEFAULTS)) {
+        const i = sessions.indexOf(name)
+        next.sessions[name] = { enabled: i !== -1, time: i !== -1 ? values[i] : (next.sessions[name]?.time || DEFAULTS[name]) }
+      }
+      next.enabled = true
+      next.audioEnabled = true
+      next.tagEnabled = true
+      save(next)
+      return reply(['✅ *IBADAH HARIAN AKTIF*', 'Grup: ' + chat,
+        ...Object.entries(next.sessions).map(([name, v]) => name.toUpperCase() + ': ' + (v.enabled ? v.time + ' WIB' : 'OFF')),
+        'Audio: ON', 'Tag @semua: ON', 'Otomatis: ON'].join('\n'))
     }
     if (action === 'setup') {
       if (!inGroup) return reply('❌ /ih setup hanya dapat dijalankan langsung di grup tujuan.')
