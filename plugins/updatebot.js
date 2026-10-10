@@ -11,7 +11,7 @@ module.exports={commands:['updatebot'],registered:true,ownerOnly:true,menu:'upda
   const status=(await git(['status','--porcelain','--untracked-files=all'],cwd)).stdout
   const entries=status ? status.split('\n') : []
   const safePaths=new Set(['database/database.json','package-lock.json'])
-  const unsafe=entries.filter(line=>!safePaths.has(line.slice(3).trim()))
+  const unsafe=entries.filter(line=>!safePaths.has(line.replace(/^\s*[MADRCU?!]{1,2}\s+/, '').trim()))
   if(unsafe.length)return reply('⚠️ *UPDATE DITUNDA*\nAda perubahan kode/file lain yang perlu diperiksa:\n'+unsafe.join('\n').slice(0,700)+'\n\nData tidak diubah. Periksa lewat git status --short.')
   const legacy=path.join(cwd,'database','database.json')
   const runtime=path.join(cwd,'database','runtime.json')
