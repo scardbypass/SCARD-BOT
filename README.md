@@ -232,8 +232,8 @@ pm2 -v
 
 ```bash
 cd /root
-git clone https://github.com/scardbypass/SUPER-BOT.git
-cd SUPER-BOT
+git clone https://github.com/scardbypass/SCARD-BOT.git
+cd SCARD-BOT
 ```
 
 ## 6. Install dependency Node.js
@@ -366,7 +366,7 @@ QR akan tampil di terminal. Buka WhatsApp → **Perangkat tertaut → Tautkan pe
 Stop bot dan hapus session lama:
 
 ```bash
-pm2 stop SUPER-BOT
+pm2 stop SCARD-BOT
 rm -rf sessions
 mkdir -p sessions
 npm start
@@ -379,8 +379,8 @@ Setelah berhasil login, hentikan proses foreground dengan <kbd>Ctrl</kbd> + <kbd
 # ♾️ Menjalankan 24/7 dengan PM2
 
 ```bash
-cd /root/SUPER-BOT
-pm2 start index.js --name SUPER-BOT
+cd /root/SCARD-BOT
+pm2 start index.js --name SCARD-BOT
 pm2 save
 pm2 startup
 ```
@@ -395,9 +395,9 @@ pm2 save
 
 ```bash
 pm2 status
-pm2 logs SUPER-BOT
-pm2 restart SUPER-BOT
-pm2 stop SUPER-BOT
+pm2 logs SCARD-BOT
+pm2 restart SCARD-BOT
+pm2 stop SCARD-BOT
 ```
 
 ---
@@ -709,10 +709,10 @@ module.exports = {
 # 🔄 Update SUPER-BOT
 
 ```bash
-cd /root/SUPER-BOT
+cd /root/SCARD-BOT
 git pull origin main
 npm install
-pm2 restart SUPER-BOT
+pm2 restart SCARD-BOT
 ```
 
 `npm install` penting jika update membawa dependency baru.
@@ -727,7 +727,7 @@ pm2 restart SUPER-BOT
 Cek log:
 
 ```bash
-pm2 logs SUPER-BOT
+pm2 logs SCARD-BOT
 ```
 
 Pastikan command memang PUBLIC atau nomor sudah terdaftar. Command owner hanya bekerja untuk `OWNER_NUMBER` / role owner.
@@ -740,7 +740,7 @@ Pastikan command memang PUBLIC atau nomor sudah terdaftar. Command owner hanya b
 Jika ingin login ulang:
 
 ```bash
-pm2 stop SUPER-BOT
+pm2 stop SCARD-BOT
 rm -rf sessions
 mkdir -p sessions
 npm start
@@ -787,13 +787,13 @@ sudo apt install -y zip
 Restart:
 
 ```bash
-pm2 restart SUPER-BOT
+pm2 restart SCARD-BOT
 ```
 
 Jika PM2 mempertahankan environment lama, gunakan:
 
 ```bash
-pm2 restart SUPER-BOT --update-env
+pm2 restart SCARD-BOT --update-env
 ```
 
 </details>
