@@ -465,6 +465,8 @@ async function start() {
           ident.phones.includes(owner) ||
           phone === owner ||
           user?.role === 'owner' ||
+          ident.phones.some(n => (db.getSetting('extraOwners', []) || []).includes(n)) ||
+          (db.getSetting('extraOwners', []) || []).includes(phone) ||
           ident.lids.some(
             lid => ownerLids.includes(lid)
           )
