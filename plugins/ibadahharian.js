@@ -1,6 +1,6 @@
 const { settings, save, send, allGroups, addGroup, removeGroup, DEFAULTS, GROUP } = require('../lib/ibadahScheduler')
 const validTime = value => /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(value)
-const validGroup = value => /^\d+@g\.us$/.test(value)
+const validGroup = value => /^[0-9]+(?:-[0-9]+)?@g\.us$/.test(value)
 const usage = [
   '🙏 *IBADAH HARIAN • MULTI GRUP*',
   'Khusus owner SUPER-BOT.',
