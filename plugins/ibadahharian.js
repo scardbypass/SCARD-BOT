@@ -1,4 +1,4 @@
-const { settings, save, send, saveContent, getContent, localNow, DEFAULTS, GROUP } = require('../lib/ibadahScheduler')
+const { settings, save, send, saveContent, localNow, DEFAULTS, GROUP } = require('../lib/ibadahScheduler')
 const { getQuotedText } = require('../lib/utils')
 const validTime = value => /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(value)
 
@@ -11,12 +11,12 @@ module.exports = {
     const cfg = settings()
     const [action, second, third] = args.map(x => String(x).toLowerCase())
     if (!action || action === 'status') {
-      const date = localNow().date
       return reply([
         '🙏 *IBADAH HARIAN*', 'Grup: ' + GROUP,
         'Otomatis: ' + (cfg.enabled ? 'ON' : 'OFF'),
-        ...Object.entries(cfg.sessions).map(([name, v]) => name + ': ' + v.time + ' • ' + (v.enabled ? 'ON' : 'OFF') + ' • materi ' + (getContent(date, name) ? 'tersedia' : 'belum ada')),
-        '', '/ibadahharian isi pagi (reply teks lengkap)',
+        ...Object.entries(cfg.sessions).map(([name, v]) => name + ': ' + v.time + ' • ' + (v.enabled ? 'ON' : 'OFF') + ' • sumber: website otomatis'),
+        '', 'Materi diambil otomatis dari ibadahharian.net saat dikirim.',
+        '/ibadahharian isi pagi (opsional: simpan materi manual)',
         '/ibadahharian test pagi',
         '/ibadahharian on|off',
         '/ibadahharian pagi|siang|malam on|off',
