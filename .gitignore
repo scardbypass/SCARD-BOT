@@ -7,3 +7,6 @@ node_modules/
 database/runtime.json
 database/*.tmp
 package-lock.json
+
+# Local update snapshots
+database/backups/
