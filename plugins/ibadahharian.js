@@ -37,7 +37,7 @@ module.exports = {
       return reply('✅ Ibadah Harian otomatis ' + action.toUpperCase())
     }
     if (action === 'test' && DEFAULTS[second]) {
-      try { await send(second, true); return reply('✅ Materi ' + second + ' terkirim ke grup.') }
+      try { await send(second, true); return }
       catch (e) { return reply('❌ ' + e.message) }
     }
     if (DEFAULTS[action] && ['on', 'off'].includes(second)) {
