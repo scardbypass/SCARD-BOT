@@ -50,9 +50,13 @@ module.exports={
   registered:true,
   ownerOnly:true,
   menu:'clear',
-  async run({reply}){
+  async run({reply,args=[]}){
     try{
-      const targets=[
+      const waOnly=String(args[0]||'').toLowerCase()==='wa'
+      if(args.length&&!waOnly)return reply('❌ Gunakan: /clear atau /clear wa')
+      const targets=waOnly
+        ? [{name:'WhatsApp media cache',dir:path.join(os.tmpdir(),'scard-bot-viewonce'),maxAgeMs:0}]
+        : [
         {name:'Download cache',dir:path.join(os.tmpdir(),'scard-bot-downloads'),maxAgeMs:0},
         {name:'Temp sticker',dir:path.join(os.tmpdir(),'scard-bot-stickers'),maxAgeMs:0}
       ]
@@ -75,7 +79,7 @@ module.exports={
 
       return reply([
         '╭───〔 *SUPER-BOT CLEANER* 〕',
-        '│ _Safe Temporary File Cleanup_',
+        waOnly?'│ _WhatsApp Media Cache Cleanup_':'│ _Safe Temporary File Cleanup_',
         '│',
         '├──〔 🧹 *CLEANED* 〕',
         '│',
