@@ -1,5 +1,5 @@
 const {settings,save,send,DEFAULTS,GROUP}=require('../lib/ibadahScheduler')
-const validTime=v=>/^([01]\\d|2[0-3]):[0-5]\\d$/.test(v)
+const validTime=v=>/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(v)
 module.exports={
  commands:['ibadahharian'],registered:true,ownerOnly:true,menu:'/ibadahharian status | on | off | test pagi | jam pagi 05:00 | pagi off',
  async run({args,reply}){
