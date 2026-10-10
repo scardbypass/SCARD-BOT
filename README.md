@@ -17,6 +17,33 @@
 
 ---
 
+## 🔒 Migrasi database aman (wajib sekali untuk instalasi lama)
+
+Mulai versi ini, database aktif menggunakan \`database/runtime.json\` yang diabaikan Git. Saat bot pertama kali dijalankan setelah update, isi \`database/database.json\` lama akan disalin ke file baru jika belum ada. **Jangan hapus database aktif atau sesi WhatsApp.**
+
+Jika \`git status --short\` menunjukkan \`M database/database.json\`, lakukan **sekali saja** dari SSH VPS:
+
+\`\`\`bash
+cd /root/SCARD-BOT
+pm2 stop SCARD-BOT
+mkdir -p /root/superbot-backup
+cp -p database/database.json /root/superbot-backup/database-before-migration.json
+git stash push -u -m "superbot-before-runtime-migration"
+git pull --ff-only origin main
+cp -p /root/superbot-backup/database-before-migration.json database/runtime.json
+node --check lib/database.js
+node --check plugins/updatebot.js
+npm install --omit=dev --package-lock=false
+pm2 restart SCARD-BOT --update-env
+git status --short
+\`\`\`
+
+Pastikan proses PM2 memang bernama \`SCARD-BOT\`; sesuaikan jika berbeda. Jangan menjalankan \`git stash pop\` tanpa meninjau perubahan karena bisa menimpa kode baru. Backup ada di \`/root/superbot-backup/\`.
+
+Setelah migrasi, penulisan data bot tidak lagi mengubah file database yang dilacak Git. \`/updatebot\` tetap **menolak perubahan kode lokal yang belum disimpan** demi keselamatan data, dan menampilkan file penyebabnya. Perintah \`npm install\` dari updater tidak lagi membuat \`package-lock.json\` baru.
+
+---
+
 ## 📖 Tentang SUPER-BOT
 
 **SUPER-BOT** adalah bot WhatsApp modular berbasis Node.js + Baileys. Setiap fitur dipisahkan sebagai plugin sehingga fitur baru dapat ditambahkan tanpa membuat core bot berantakan.
