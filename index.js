@@ -25,6 +25,7 @@ const { startVotingScheduler } = require('./lib/votingScheduler')
 const { startWebsiteMonitor } = require('./lib/websiteMonitor')
 const { askGemini } = require('./lib/gemini')
 const { startSaldoScheduler } = require('./lib/saldoScheduler')
+const { startIbadahScheduler } = require('./lib/ibadahScheduler')
 
 // ============================================================
 // CONFIG
@@ -303,6 +304,7 @@ async function start() {
 
         startVotingScheduler(() => activeSock)
         startWebsiteMonitor(() => activeSock)
+        startIbadahScheduler(() => activeSock)
       }
 
       // Saldo scheduler menggunakan socket aktif
