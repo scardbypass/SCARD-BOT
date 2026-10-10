@@ -28,9 +28,10 @@ module.exports={commands:['updatebot'],registered:true,ownerOnly:true,menu:'upda
     const stamp=new Date().toISOString().replace(/[:.]/g,'-')
     fs.copyFileSync(runtime,path.join(backupDir,'runtime-before-update-'+stamp+'.json'))
   }
-  // Stash hanya dua file aman, jangan stash atau sentuh perubahan lainnya.
-  if(entries.length){
-    await git(['stash','push','-u','-m','superbot-update-runtime-backup','--','database/database.json','package-lock.json'],cwd)
+  // Hanya stash file tracked yang berubah; file ignored tidak boleh dijadikan pathspec.
+  const trackedChanged=(await git(['diff','--name-only','HEAD','--','database/database.json'],cwd)).stdout
+  if(trackedChanged.split('\n').includes('database/database.json')){
+    await git(['stash','push','-m','superbot-update-legacy-backup','--','database/database.json'],cwd)
   }
   await git(['fetch',remote,branch],cwd)
   const behind=Number((await git(['rev-list','--count',`HEAD..${remote}/${branch}`],cwd)).stdout)
