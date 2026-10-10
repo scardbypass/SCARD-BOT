@@ -14,11 +14,13 @@ module.exports = {
       return reply([
         '🙏 *IBADAH HARIAN*', 'Grup: ' + GROUP,
         'Otomatis: ' + (cfg.enabled ? 'ON' : 'OFF'),
+        'Audio: ' + (cfg.audioEnabled ? 'ON' : 'OFF') + ' (rekaman yang tersedia di website)',
         ...Object.entries(cfg.sessions).map(([name, v]) => name + ': ' + v.time + ' • ' + (v.enabled ? 'ON' : 'OFF') + ' • sumber: website otomatis'),
         '', 'Materi diambil otomatis dari ibadahharian.net saat dikirim.',
         '/ibadahharian isi pagi (opsional: simpan materi manual)',
         '/ibadahharian test pagi',
         '/ibadahharian on|off',
+        '/ibadahharian audio on|off',
         '/ibadahharian pagi|siang|malam on|off',
         '/ibadahharian jam pagi|siang|malam HH:MM'
       ].join('\n'))
@@ -35,6 +37,10 @@ module.exports = {
     if (['on', 'off'].includes(action) && !second) {
       cfg.enabled = action === 'on'; save(cfg)
       return reply('✅ Ibadah Harian otomatis ' + action.toUpperCase())
+    }
+    if (action === 'audio' && ['on', 'off'].includes(second)) {
+      cfg.audioEnabled = second === 'on'; save(cfg)
+      return reply('✅ Audio Ibadah Harian ' + second.toUpperCase() + '. Teks tetap aktif.')
     }
     if (action === 'test' && DEFAULTS[second]) {
       try { await send(second, true); return }
