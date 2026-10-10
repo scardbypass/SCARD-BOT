@@ -833,3 +833,21 @@ Built for modular WhatsApp automation.
 **SCARD-PROJECT**
 
 </div>
+
+
+## Channel WhatsApp (Saluran) — eksperimental
+
+Jadikan akun SUPER-BOT admin Channel dengan izin memposting. Konfigurasi dilakukan **dari chat pribadi owner**, bukan lewat Channel. ID Channel harus berupa `123456@newsletter` (bukan link undangan). Contoh:
+
+```text
+/ihchannel add 123456@newsletter
+/ihchannel pagi 05:00 123456@newsletter
+/ihchannel setup 05:00 12:00 18:00 123456@newsletter
+/ihchannel status 123456@newsletter
+/ihchannel test pagi 123456@newsletter
+/ihchannel audio off 123456@newsletter
+/ihchannel off 123456@newsletter
+/ihchannel del 123456@newsletter
+```
+
+Jadwal Channel terpisah dari grup; `@semua` tidak dikirim ke Channel. Materi dan audio menggunakan sumber yang sama dengan grup. **Penting:** pengiriman Channel melalui `sock.sendMessage` bergantung dukungan Baileys rc14 serta izin akun. Sebelum mengandalkan jadwal otomatis, jalankan `/ihchannel test pagi ID` dan periksa bahwa posting benar-benar muncul di Channel. Jika gagal, periksa log `pm2 logs SCARD-BOT`; belum ada jaminan semua akun/versi Baileys mendukung newsletter posting.
