@@ -47,6 +47,8 @@ module.exports={
         item('◈','aistatus','Status Gemini AI'),
         '│',
         '├──〔 🙏 *IBADAH HARIAN MULTI-GRUP* 〕',
+        item('◈','ih set 18:00','Aktifkan malam saja dalam 1 perintah'),
+        item('◈','ih set 12:00 18:00','Aktifkan siang dan malam'),
         item('◈','ih setup 05:00 12:00 18:00','Daftar grup + set 3 jam + audio/tag ON + otomatis ON'),
         item('◈','ih help','Daftar lengkap perintah Ibadah Harian'),
         item('◈','ih grup / add / del','Daftarkan atau hapus grup'),
