@@ -40,20 +40,42 @@ module.exports = {
   registered: true,
   ownerOnly: true,
   menu: '/ih pagi 05:00 | siang 12:00 | malam 18:00 | set 18:00 | set 12:00 18:00 | setup 05:00 12:00 18:00 | help | grup | add | del | status | on/off | jam | audio | tag | test',
-  async run({ args = [], msg, reply }) {
+  async run({ args = [], msg, reply, sock }) {
     const [action = 'help', second, third, fourth] = args.map(v => String(v).toLowerCase())
     const chat = msg?.key?.remoteJid || ''
     const inGroup = validGroup(chat)
     const target = [fourth, third, second].find(validGroup) || (inGroup ? chat : null)
     if (action === 'help' || action === 'menu') return reply(usage)
     if (action === 'grup' || action === 'list') {
-      const groups = allGroups()
-      return reply('🙏 *GRUP IBADAH HARIAN*\n' + Object.entries(groups).map(([id, c], i) =>
-        (i + 1) + '. ' + id + ' • ' + (c.enabled ? 'ON' : 'OFF') +
-        ' • Audio ' + (c.audioEnabled !== false ? 'ON' : 'OFF') +
-        ' • Tag ' + (c.tagEnabled !== false ? 'ON' : 'OFF') +
-        '\n   ' + Object.entries(c.sessions || {}).map(([n, v]) => n + ' ' + (v.enabled ? v.time : 'OFF')).join(' | ')
-      ).join('\n'))
+      const groups = Object.entries(allGroups())
+      const details = await Promise.all(groups.map(async ([id, cfg], i) => {
+        let name = id
+        if (typeof sock?.groupMetadata === 'function') {
+          try {
+            const info = await Promise.race([
+              sock.groupMetadata(id),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
+            ])
+            name = info?.subject || id
+          } catch (error) {
+            console.warn('[IBADAH GROUP NAME]', id, error.message)
+          }
+        }
+        const sessions = cfg.sessions || {}
+        return [
+          (i + 1) + '. 📱 *' + name + '*',
+          '   ID: ' + id,
+          '   Status: ' + (cfg.enabled ? 'ON' : 'OFF'),
+          '   Audio: ' + (cfg.audioEnabled !== false ? 'ON' : 'OFF') +
+            ' | Tag @semua: ' + (cfg.tagEnabled !== false ? 'ON' : 'OFF'),
+          ...Object.entries(DEFAULTS).map(([key]) => {
+            const label = { pagi: '🌅 Pagi', siang: '☀️ Siang', malam: '🌙 Malam' }[key]
+            const value = sessions[key]
+            return '   ' + label + ': ' + (value?.enabled ? value.time + ' WIB' : 'OFF')
+          })
+        ].join('\\n')
+      }))
+      return reply('🙏 *GRUP IBADAH HARIAN*\\n\\n' + (details.length ? details.join('\\n\\n') : 'Belum ada grup terdaftar.'))
     }
     if (DEFAULTS[action] && validTime(second || '') && !third) {
       if (!inGroup) return reply('❌ Pengaturan cepat sesi hanya dapat dijalankan di grup tujuan.')
