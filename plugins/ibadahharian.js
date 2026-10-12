@@ -3,7 +3,7 @@ const validTime = value => /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(value)
 const validGroup = value => /^[0-9]+(?:-[0-9]+)?@g\.us$/.test(value)
 const usage = [
   '╭────────────────────╮',
-  '🙏 *IBADAH HARIAN V2*',
+  '🙏 *IBADAH HARIAN*',
   '   *PUSAT PENGATURAN GRUP*',
   '╰────────────────────╯',
   '',
@@ -60,7 +60,7 @@ const usage = [
   '_mdcjombang.id • SUPER-BOT_'
 ].join('\n')
 const usageFull = [
-  '📖 *IBADAH HARIAN V2 • PANDUAN LENGKAP*',
+  '📖 *IBADAH HARIAN • PANDUAN LENGKAP*',
   '',
   '*Pengaturan cepat (di grup)*',
   '/ih pagi 05:00',
@@ -103,7 +103,7 @@ const usageFull = [
 ].join('\n')
 
 module.exports = {
-  commands: ['ibadahharian', 'ih', 'ihv2'],
+  commands: ['ibadahharian', 'ih'],
   registered: true,
   ownerOnly: true,
   menu: '/ih pagi 05:00 | siang 12:00 | malam 18:00 | set 18:00 | set 12:00 18:00 | setup 05:00 12:00 18:00 | help | grup | add | del | status | on/off | jam | audio | tag | test',
