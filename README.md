@@ -58,13 +58,13 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 
 ---
 
-## 🆕 Ibadah Harian V2 — panduan menu dan pengaturan
+## 🆕 Ibadah Harian — panduan menu dan pengaturan
 
-Ibadah Harian V2 adalah pembaruan **tampilan bantuan dan format pesan** pada plugin yang sudah ada. **Bukan scheduler atau database baru**: pengaturan grup lama tetap digunakan, sehingga tidak perlu mendaftarkan ulang grup.
+Pembaruan Ibadah Harian adalah peningkatan **tampilan bantuan dan format pesan** pada plugin yang sudah ada. **Bukan scheduler atau database baru**: pengaturan grup lama tetap digunakan, sehingga tidak perlu mendaftarkan ulang grup.
 
 ### Akses
 
-Semua perintah \`/ih\`, \`/ibadahharian\`, dan alias \`/ihv2\` menggunakan \`ownerOnly: true\`. Owner utama, owner tambahan yang sudah diberi hak, dan akun bot yang diakui sebagai owner oleh core dapat mengakses. Anggota biasa hanya menerima materi terjadwal.
+Semua perintah \`/ih\` dan \`/ibadahharian\` menggunakan \`ownerOnly: true\`. Owner utama, owner tambahan yang sudah diberi hak, dan akun bot yang diakui sebagai owner oleh core dapat mengakses. Anggota biasa hanya menerima materi terjadwal.
 
 ### Menu bantuan
 
