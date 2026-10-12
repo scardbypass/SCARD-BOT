@@ -58,6 +58,94 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 
 ---
 
+## 🆕 Ibadah Harian V2 — panduan menu dan pengaturan
+
+Ibadah Harian V2 adalah pembaruan **tampilan bantuan dan format pesan** pada plugin yang sudah ada. **Bukan scheduler atau database baru**: pengaturan grup lama tetap digunakan, sehingga tidak perlu mendaftarkan ulang grup.
+
+### Akses
+
+Semua perintah \`/ih\`, \`/ibadahharian\`, dan alias \`/ihv2\` menggunakan \`ownerOnly: true\`. Owner utama, owner tambahan yang sudah diberi hak, dan akun bot yang diakui sebagai owner oleh core dapat mengakses. Anggota biasa hanya menerima materi terjadwal.
+
+### Menu bantuan
+
+| Perintah | Kegunaan |
+|---|---|
+| \`/ih\` atau \`/ih help\` | Menu ringkas, ramah HP dan ukuran huruf besar |
+| \`/ih help lengkap\` | Seluruh perintah termasuk contoh dari chat pribadi |
+| \`/ih help full\` | Alias panduan lengkap |
+| \`/ihv2\` | Alias menu V2 |
+| \`/ih grup\` | Nama, ID, status, jadwal dan audio/tag tiap grup |
+
+### Pengaturan cepat — jalankan di grup tujuan
+
+\`\`\`text
+/ih pagi 05:00
+/ih siang 12:00
+/ih malam 18:00
+/ih set 18:00
+/ih set 12:00 18:00
+/ih set 05:00 12:00 18:00
+/ih setup 05:00 12:00 18:00
+/ih setup 06:00 off 19:00
+\`\`\`
+
+Pengaturan cepat mendaftarkan grup bila belum terdaftar, mengaktifkan otomatis, audio dan tag, serta mengganti sesi sesuai perintah. \`off\` pada \`setup\` berarti sesi itu tidak dijalankan. **Hati-hati:** mengulang pengaturan cepat juga akan mengaktifkan kembali audio dan tag.
+
+### Pengaturan bertahap — jalankan di grup tujuan
+
+\`\`\`text
+/ih add
+/ih status
+/ih jam pagi 06:00
+/ih jam siang 13:00
+/ih jam malam 19:00
+/ih pagi on
+/ih siang off
+/ih malam on
+/ih audio off
+/ih tag off
+/ih on
+/ih test malam
+\`\`\`
+
+\`/ih on\` mengaktifkan otomatis grup, tetapi tidak memaksa sesi yang OFF menjadi ON. \`/ih off\` menghentikan otomatis untuk grup tersebut. \`/ih del\` menghapus grup dari daftar pengiriman. \`/ih test\` mengirim materi manual dan tidak menandai jadwal otomatis sebagai terkirim.
+
+### Pengaturan lewat chat pribadi owner
+
+Tambahkan JID grup pada akhir perintah yang mendukung target, misalnya:
+
+\`\`\`text
+/ih add 120363000000000000@g.us
+/ih status 120363000000000000@g.us
+/ih jam malam 19:00 120363000000000000@g.us
+/ih audio off 120363000000000000@g.us
+/ih tag on 120363000000000000@g.us
+/ih test malam 120363000000000000@g.us
+/ih del 120363000000000000@g.us
+\`\`\`
+
+Perintah \`/ih set\`, \`/ih setup\` dan pengaturan cepat satu sesi dengan jam dijalankan **di grup**, bukan dari chat pribadi.
+
+### Format pesan renungan
+
+Formatter menampilkan judul, tanggal WIB, bagian bernomor, jeda paragraf dan footer distribusi. Judul sumber tetap dipertahankan, termasuk **Waktu Teduh** pada bagian akhir, bukan diganti menjadi Penutup. WhatsApp mengatur pembungkusan baris secara otomatis sehingga pengguna dengan font besar tetap dapat membaca tanpa baris yang dipaksa pendek. Materi teks berasal dari \`ibadahharian.net\`; kredit distribusi \`mdcjombang.id\`.
+
+### Verifikasi dan pemecahan masalah
+
+\`\`\`bash
+cd /root/SCARD-BOT
+git pull --ff-only origin main
+node --check plugins/ibadahharian.js
+node --check plugins/menu.js
+node --check lib/ibadahScheduler.js
+pm2 restart SCARD-BOT --update-env
+pm2 logs SCARD-BOT --lines 50 --nostream
+\`\`\`
+
+Atau gunakan \`/updatebot\` dari akun owner bila fitur update sudah berjalan normal. Setelah restart, coba \`/ih help\`, \`/ih help lengkap\`, \`/ih grup\`, \`/ih status\`, lalu \`/ih test malam\` di grup tujuan. **Jangan menguji langsung pada grup publik tanpa izin admin.**
+
+---
+
 # 🙏 Ibadah Harian Multi-Grup (SUPER-BOT)
 
 SUPER-BOT dapat mengirim teks Ibadah Harian otomatis dari **ibadahharian.net** ke banyak grup WhatsApp. Pesan menampilkan kredit distribusi **mdcjombang.id**, dengan opsi tag semua anggota memakai **Baileys `mentionAll: true`**. Semua pengaturan khusus **OWNER**; anggota biasa tidak dapat menjalankan perintah manajemen.
