@@ -8,7 +8,7 @@ module.exports={
   commands:['airbot','depoapi'],
   registered:true,
   ownerOnly:true,
-  menu:'airbot <nominal|cancel> • depoapi',
+  menu:'airbot <nominal|cancel> • depoapi [nominal]',
   async run({sock,msg,reply,command,args,phone}){
     const group=process.env.AIRBOT_GROUP_ID;
     if(!group)return reply('❌ AIRBOT_GROUP_ID belum diatur di .env');
@@ -33,10 +33,12 @@ module.exports={
     if(command==='depoapi'){
       const qt=getQuotedText(msg);
       const p=getPending(phone);
-      let n=quotedNominal(qt);
-      if(!n&&p)n=p.nominal;
-      if(!n)return reply('❌ Deposit aktif tidak ditemukan.\n\nMulai lagi dengan:\nairbot 100000');
-      if(qt&&!qt.includes('Request Deposit AirBot'))return reply('❌ Reply pesan *Request Deposit AirBot* yang benar, lalu kirim:\ndepoapi');
+      const direct=String(args.join(' ')||'').trim();
+      if(direct&&!/^\d+$/.test(direct))return reply('❌ Nominal harus angka positif. Contoh: /depoapi 10000');
+      let n=direct?nominal(direct):quotedNominal(qt);
+      if(!n&&!direct&&p)n=p.nominal;
+      if(!n)return reply('❌ Nominal tidak valid atau deposit aktif tidak ditemukan.\n\nContoh langsung:\n/depoapi 10000\n\nAtau reply pesan Request Deposit AirBot dengan /depoapi');
+      if(!direct&&qt&&!qt.includes('Request Deposit AirBot'))return reply('❌ Reply pesan *Request Deposit AirBot* yang benar, atau gunakan /depoapi 10000');
       if(!beginTopup({chat:msg.key.remoteJid,nominal:n}))return reply('⏳ Masih ada topup CEIR yang menunggu respons grup. Tunggu konfirmasi atau timeout sebelum mengirim transaksi lain.');
       try{
         await sock.sendMessage(group,{text:`/Api topup ${n}`});
