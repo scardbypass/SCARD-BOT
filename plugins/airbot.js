@@ -1,5 +1,5 @@
 const {formatRupiah,getQuotedText}=require('../lib/utils');
-const {setPending,getPending,clearPending}=require('../lib/airbotBridge');
+const {setPending,getPending,clearPending,beginTopup,clearTopup,armTopupTimeout}=require('../lib/airbotBridge');
 
 function nominal(v){const n=parseInt(String(v||'').replace(/[^\d]/g,''),10);return Number.isFinite(n)&&n>0?n:null}
 function quotedNominal(t){const m=String(t||'').match(/Nominal\s*:\s*Rp?\s*([\d.,]+)/i);return m?nominal(m[1]):null}
@@ -37,9 +37,13 @@ module.exports={
       if(!n&&p)n=p.nominal;
       if(!n)return reply('❌ Deposit aktif tidak ditemukan.\n\nMulai lagi dengan:\nairbot 100000');
       if(qt&&!qt.includes('Request Deposit AirBot'))return reply('❌ Reply pesan *Request Deposit AirBot* yang benar, lalu kirim:\ndepoapi');
-      await sock.sendMessage(group,{text:`/Api topup ${n}`});
-      clearPending(phone);
-      return reply(`✅ *CEIR Topup Dikirim*\n\nNominal : ${formatRupiah(n)}\n\nPerintah ke grup:\n/Api topup ${n}`);
+      if(!beginTopup({chat:msg.key.remoteJid,nominal:n}))return reply('⏳ Masih ada topup CEIR yang menunggu respons grup. Tunggu konfirmasi atau timeout sebelum mengirim transaksi lain.');
+      try{
+        await sock.sendMessage(group,{text:`/Api topup ${n}`});
+        clearPending(phone);
+        armTopupTimeout(sock);
+        return reply(`⏳ *Menunggu Konfirmasi CEIR*\n\nNominal: ${formatRupiah(n)}\nPerintah topup telah dikirim ke grup.\nHasil berhasil/gagal akan diteruskan dari respons grup (maksimal 2 menit).`);
+      }catch(error){clearTopup();return reply('❌ Gagal mengirim perintah topup ke grup: '+error.message)}
     }
   }
 };
