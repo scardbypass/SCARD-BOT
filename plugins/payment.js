@@ -1,0 +1,1 @@
+const core=require('../lib/imeiCenter/core');module.exports={commands:['payment'],registered:false,ownerOnly:true,async run(ctx){return core.payment(ctx)}};
