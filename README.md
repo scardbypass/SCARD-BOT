@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🤖 SCARD-BOT
+# 🤖 SUPER-BOT
 
 ### V2 • Modular WhatsApp Automation Bot
 
@@ -17,9 +17,9 @@
 
 ---
 
-## 📖 Tentang SCARD-BOT
+## 📖 Tentang SUPER-BOT
 
-**SCARD-BOT** adalah bot WhatsApp modular berbasis Node.js + Baileys. Setiap fitur dipisahkan sebagai plugin sehingga fitur baru dapat ditambahkan tanpa membuat core bot berantakan.
+**SUPER-BOT** adalah bot WhatsApp modular berbasis Node.js + Baileys. Setiap fitur dipisahkan sebagai plugin sehingga fitur baru dapat ditambahkan tanpa membuat core bot berantakan.
 
 Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini AI, downloader TikTok/Instagram/YouTube, website monitoring, backup, provider balance, sticker, View Once helper, dan automation voting.
 
@@ -29,6 +29,61 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 > Gunakan bot dan fitur downloader hanya untuk konten yang memang boleh Anda akses/download. Jangan commit file `.env` atau folder `sessions/` ke repository.
 
 ---
+
+
+---
+
+# 📱 IMEI CENTER — 3B / 1B / 3BS / 3BD (V2)
+
+Empat perintah berbagi mesin order, tetapi harga dan grup operator **terpisah untuk setiap layanan**. IMEI yang masih diproses di salah satu layanan ditolak di layanan lainnya. Setiap order terlebih dahulu diperiksa lewat REST API CeirGo: `POST /api/order` dengan `code=cek_imei`, lalu `GET /api/order/{id}` bila pending. Hanya hasil IMEI **UNKNOWN** yang diteruskan; ROAMER, REGISTERED, error, atau hasil ambigu ditolak. Pengecekan API dapat mengurangi saldo CeirGo meskipun order 3B ditolak.
+
+## Konfigurasi VPS
+
+```env
+BOT_NAME=SUPER-BOT
+OWNER_NUMBER=628xxxxxxxxxx
+CEIRGO_API_BASE_URL=https://ceirgo.id
+CEIRGO_API_KEY=ISI_DI_VPS_SAJA
+CEIRGO_IMEI_SERVICE_CODE=cek_imei
+CEIRGO_TIMEOUT_MS=20000
+CEIRGO_POLL_ATTEMPTS=8
+CEIRGO_POLL_INTERVAL_MS=3000
+TIMEZONE=Asia/Jakarta
+```
+
+Jangan commit `.env`. **Tidak ada API key dalam chat, invoice, maupun source**. Periksa harga layanan aktual di `GET /api/services/cek_imei`; harga API bukan harga jual seller.
+
+## Langkah konfigurasi WhatsApp (owner)
+
+1. Masuk ke masing-masing **grup operator** dan jalankan `/3b operator set`, `/1b operator set`, `/3bs operator set`, atau `/3bd operator set`. Keempatnya boleh menunjuk grup berbeda.
+2. Masuk ke setiap **grup seller**, jalankan `/3b add` untuk mendaftarkan grup.
+3. Tetapkan harga global setiap layanan: `/3b harga global 25000`, `/1b harga global 15000`, `/3bs harga global 35000`, `/3bd harga global 40000`. **Angka hanya contoh**.
+4. Jika perlu harga khusus, ketik `/3bs harga 30000` di grup seller; `/3bs harga default` mengembalikan ke global.
+5. Set rekening invoice, misalnya `/3b bank BCA 1234567890 NAMA PEMILIK`.
+
+| Perintah | Akses | Fungsi |
+|---|---|---|
+| `/3b`, `/1b`, `/3bs`, `/3bd` | Anggota grup seller | Menu harga & contoh order |
+| `/3b 356424104776994` | Anggota grup seller | Cek CEIR dan order jika UNKNOWN |
+| `/3b add` / `/3b del` | Owner di grup seller | Daftarkan / hapus grup |
+| `/3bs operator set` / `off` | Owner di grup operator | Set / nonaktifkan grup operator layanan |
+| `/1b harga global 15000` | Owner | Harga global layanan |
+| `/3bd harga 40000` / `default` | Owner di grup seller | Harga custom / global |
+| `/3b on` / `off` | Owner di grup seller | Aktif/nonaktif layanan di grup |
+| `/3b global on` / `off` | Owner | Aktif/nonaktif seluruh layanan |
+| `/3b status` | Owner | Konfigurasi layanan |
+| `/3b invoice` | Anggota grup seller | Tagihan outstanding gabungan |
+| `/payment all` | Owner di grup seller | Lihat konfirmasi pembayaran semua layanan |
+| `/payment 3bs confirm` | Owner di grup seller | Tandai lunas hanya tagihan 3BS |
+| `/payment all confirm` | Owner di grup seller | Tandai lunas semua tagihan |
+
+Operator mana pun di grup operator terdaftar bisa **reply pesan order bot** dengan `DONE` atau `FAILED`. Reply harus menunjuk pesan order asli, bukan teks bebas tanpa reply. Nomor bot sendiri tidak diproses sebagai perintah reply agar tidak berulang.
+
+**Penagihan**: sukses menambah outstanding dengan harga saat order dibuat; `FAILED` tidak ditagih. Invoice outstanding otomatis dikirim **21.00 WIB** setiap hari selama masih ada tagihan. Hanya owner boleh menandai lunas lewat `/payment ... confirm`. Pending tidak ditagih; sukses setelah pelunasan masuk tagihan baru.
+
+**Backup**: pukul **00.00 WIB** bot mengirim rekap dan JSON hari sebelumnya ke chat pribadi owner. Setelah kedua pesan berhasil dikirim, data harian gagal/ditolak serta sukses yang sudah lunas dapat dibersihkan. Outstanding dan pending **tidak dihapus**. File `database/imei-center.json` wajib dibackup secara aman, jangan dipublikasikan: memuat IMEI dan metadata grup. Konfigurasi dan transaksi berjalan tetap disimpan saat restart.
+
+**Batasan sebelum produksi**: dokumentasi publik CeirGo menampilkan `result_schema` sebagai object generik; parser hanya menerima status eksplisit UNKNOWN/ROAMER/REGISTERED. Periksa respons akun asli (redaksi token/IMEI) dan uji pengiriman Baileys sebelum layanan dinyalakan untuk seller. Scheduler berjalan pada satu proses bot; jangan jalankan dua instance terhadap database JSON yang sama. Keberhasilan `sendMessage` bukan bukti penerima membaca pesan. Pengecekan API yang timeout dapat saja telah dikenai biaya.
 
 ## ✨ Fitur Utama
 
@@ -105,7 +160,7 @@ sudo apt install -y git curl ffmpeg python3 python3-pip zip
 Downloader membutuhkan **yt-dlp**:
 
 ```bash
-python3 -m pip install -U yt-dlp
+sudo apt install -y python3-venv\npython3 -m venv /opt/yt-dlp-venv\n/opt/yt-dlp-venv/bin/pip install -U "yt-dlp[default]"
 ```
 
 Jika distro menolak instalasi pip global, install yt-dlp menggunakan metode resmi yang sesuai distro/server Anda.
@@ -143,12 +198,12 @@ sudo npm install -g pm2
 pm2 -v
 ```
 
-## 5. Clone SCARD-BOT
+## 5. Clone SUPER-BOT
 
 ```bash
 cd /root
-git clone https://github.com/scardbypass/SCARD-BOT.git
-cd SCARD-BOT
+git clone https://github.com/scardbypass/SUPER-BOT.git
+cd SUPER-BOT
 ```
 
 ## 6. Install dependency Node.js
@@ -171,7 +226,7 @@ nano .env
 Contoh konfigurasi:
 
 ```env
-BOT_NAME=SCARD-BOT
+BOT_NAME=SUPER-BOT
 PREFIX=/
 
 OWNER_NUMBER=628xxxxxxxxxx
@@ -216,7 +271,7 @@ QCEIR_API_KEY=
 # Gemini
 GEMINI_API_KEY=
 GEMINI_MODEL=
-GEMINI_SYSTEM_PROMPT=Kamu adalah asisten WhatsApp SCARD-BOT.
+GEMINI_SYSTEM_PROMPT=Kamu adalah asisten WhatsApp SUPER-BOT.
 
 # Downloader
 YTDLP_PATH=yt-dlp
@@ -279,7 +334,7 @@ QR akan tampil di terminal. Buka WhatsApp → **Perangkat tertaut → Tautkan pe
 Stop bot dan hapus session lama:
 
 ```bash
-pm2 stop SCARD-BOT
+pm2 stop SUPER-BOT
 rm -rf sessions
 mkdir -p sessions
 npm start
@@ -292,8 +347,8 @@ Setelah berhasil login, hentikan proses foreground dengan <kbd>Ctrl</kbd> + <kbd
 # ♾️ Menjalankan 24/7 dengan PM2
 
 ```bash
-cd /root/SCARD-BOT
-pm2 start index.js --name SCARD-BOT
+cd /root/SUPER-BOT
+pm2 start index.js --name SUPER-BOT
 pm2 save
 pm2 startup
 ```
@@ -308,9 +363,9 @@ pm2 save
 
 ```bash
 pm2 status
-pm2 logs SCARD-BOT
-pm2 restart SCARD-BOT
-pm2 stop SCARD-BOT
+pm2 logs SUPER-BOT
+pm2 restart SUPER-BOT
+pm2 stop SUPER-BOT
 ```
 
 ---
@@ -480,7 +535,7 @@ Contoh request deposit:
 /airbot 100000
 ```
 
-SCARD-BOT mengirim:
+SUPER-BOT mengirim:
 
 ```text
 /deposit 100000
@@ -583,7 +638,7 @@ Bot mengirim file `promo-subscribers.json` berisi nomor subscriber yang tersimpa
 # 📂 Struktur Project
 
 ```text
-SCARD-BOT/
+SUPER-BOT/
 ├── index.js
 ├── package.json
 ├── .env.example
@@ -654,14 +709,14 @@ module.exports = {
 
 ---
 
-# 🔄 Update SCARD-BOT V2
+# 🔄 Update SUPER-BOT V2
 
 ```bash
-cd /root/SCARD-BOT
+cd /root/SUPER-BOT
 git checkout v2
 git pull origin v2
 npm install
-pm2 restart SCARD-BOT
+pm2 restart SUPER-BOT
 ```
 
 `npm install` penting jika update membawa dependency baru.
@@ -676,7 +731,7 @@ pm2 restart SCARD-BOT
 Cek log:
 
 ```bash
-pm2 logs SCARD-BOT
+pm2 logs SUPER-BOT
 ```
 
 Pastikan command memang PUBLIC atau nomor sudah terdaftar. Command owner hanya bekerja untuk `OWNER_NUMBER` / role owner.
@@ -689,7 +744,7 @@ Pastikan command memang PUBLIC atau nomor sudah terdaftar. Command owner hanya b
 Jika ingin login ulang:
 
 ```bash
-pm2 stop SCARD-BOT
+pm2 stop SUPER-BOT
 rm -rf sessions
 mkdir -p sessions
 npm start
@@ -712,7 +767,7 @@ ffmpeg -version
 Update yt-dlp bila perlu:
 
 ```bash
-python3 -m pip install -U yt-dlp
+sudo apt install -y python3-venv\npython3 -m venv /opt/yt-dlp-venv\n/opt/yt-dlp-venv/bin/pip install -U "yt-dlp[default]"
 ```
 
 Konten private/login-required atau konten yang tidak tersedia dapat gagal didownload.
@@ -736,13 +791,13 @@ sudo apt install -y zip
 Restart:
 
 ```bash
-pm2 restart SCARD-BOT
+pm2 restart SUPER-BOT
 ```
 
 Jika PM2 mempertahankan environment lama, gunakan:
 
 ```bash
-pm2 restart SCARD-BOT --update-env
+pm2 restart SUPER-BOT --update-env
 ```
 
 </details>
@@ -762,7 +817,7 @@ pm2 restart SCARD-BOT --update-env
 
 <div align="center">
 
-### ⚡ SCARD-BOT
+### ⚡ SUPER-BOT
 
 Built for modular WhatsApp automation.
 
