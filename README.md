@@ -824,3 +824,7 @@ Built for modular WhatsApp automation.
 **SCARD-PROJECT**
 
 </div>
+
+## DHRU API postpaid (v2)
+
+Set `DHRU_PORT=3107`, `DHRU_BIND_HOST=127.0.0.1`, `DHRU_PUBLIC_URL=https://YOUR-DOMAIN/api/dhru`; configure HTTPS reverse proxy to `http://127.0.0.1:3107/api/dhru`. Every registered seller WhatsApp group has its own credentials: `/apikey` creates or shows its username/key; `/api reset confirm` rotates key; `/api status` shows status. Owner: `/api on|off` (group), `/api global on|off` (all). Orders share the existing IMEI processing and invoice system; no prepaid balance. POST JSON or form-encoded with `username`, `apiaccesskey`, `action`. Actions currently supported: `accountinfo`, `imeiservicelist`, `placeimeiorder` (`service=3b|1b|3bs|3bd`, `imei=15 digits`), `orderstatus` (`orderid`), `orderstatusbulk` (`orderids` comma-separated). Responses are JSON. **Important:** DHRU Fusion installations may require exact XML/JSON field shapes and service numeric IDs; validate compatibility before selling. API keys are shown to every member of a registered seller group by design; anyone with the key can create billable orders. Protect the HTTPS endpoint with rate limits at the reverse proxy. Do not expose the Node port publicly.
