@@ -49,6 +49,7 @@ module.exports={
       }
       if(ok+failed<subscribers.length)await sleep(delay)
     }
-    const finishedAt=new Date()\n    return reply(`✅ *PROMOSI SELESAI*\n\n👥 Total     : ${subscribers.length}\n✅ Berhasil  : ${ok}\n❌ Gagal     : ${failed}\n\n🕐 Mulai     : ${fmt(startedAt)}\n🏁 Selesai   : ${fmt(finishedAt)}\n⏱️ Durasi    : ${duration(finishedAt-startedAt)}\n⏳ Delay     : ${Math.round(delay/1000)} detik/penerima`)
+    const finishedAt=new Date()
+    return reply(`✅ *PROMOSI SELESAI*\n\n👥 Total     : ${subscribers.length}\n✅ Berhasil  : ${ok}\n❌ Gagal     : ${failed}\n\n🕐 Mulai     : ${fmt(startedAt)}\n🏁 Selesai   : ${fmt(finishedAt)}\n⏱️ Durasi    : ${duration(finishedAt-startedAt)}\n⏳ Delay     : ${Math.round(delay/1000)} detik/penerima`)
   }
 }
