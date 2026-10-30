@@ -16,3 +16,9 @@ assert.equal(parseAirbotResult('Tidak tersedia (Gangguan atau CLOSE)',imei),'una
 assert.equal(parseAirbotResult('Success✅\n354542501034023',imei),null);
 assert.equal(parseAirbotResult('Sedang diproses',imei),null);
 console.log('AirBot response parser tests OK');
+
+const {state,allowed}=store;
+assert.equal(allowed('3b','__unregistered_group__'),false,'unregistered seller must be denied');
+assert.equal(parseAirbotResult('Success\\n354542501034022\\n354542501034023',imei),null);
+assert.equal(parseAirbotResult('Tidak tersedia (Gangguan atau CLOSE)',imei),'unavailable');
+console.log('IMEI seller access and duplicate-result tests OK');
