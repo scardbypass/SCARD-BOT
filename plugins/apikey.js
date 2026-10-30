@@ -1,6 +1,6 @@
 const crypto=require('crypto');
-const {state,save}=require('./imeiCenter/store');
-const {invoice}=require('./imeiCenter/core');
+const {state,save}=require('../lib/imeiCenter/store');
+const {invoice}=require('../lib/imeiCenter/core');
 function getAccount(group){return state.settings.apiAccounts[group]}
 function newKey(){return 'sk_'+crypto.randomBytes(32).toString('hex')}
 function createAccount(group){
@@ -35,6 +35,48 @@ module.exports={commands:['apikey','api'],registered:false,async run({msg,reply,
   if(args[1]!=='confirm')return reply('⚠️ API key lama akan langsung dinonaktifkan. Ketik /api reset confirm');
   account.key=newKey();account.resetAt=new Date().toISOString();save();return reply('✅ API KEY BARU\n👤 '+account.username+'\n🔑 '+account.key);
  }
+ if(a==='docs'){
+  const endpoint=process.env.DHRU_PUBLIC_URL||'https://YOUR-DOMAIN/api/dhru';
+  return reply([
+   '╭──〔 📘 DHRU API DOCS 〕',
+   '│ 🤖 SUPER-BOT • POSTPAID',
+   '│ 🌐 '+endpoint,
+   '│ 📡 Method: POST',
+   '│ 📦 Body: JSON / form-urlencoded',
+   '├── 🔐 AUTHENTICATION',
+   '│ username: username grup seller',
+   '│ apiaccesskey: API key grup',
+   '│ /apikey → lihat / buat akun',
+   '├── 📋 ACTIONS',
+   '│ accountinfo → informasi akun',
+   '│ imeiservicelist → daftar layanan',
+   '│ placeimeiorder → buat order',
+   '│ orderstatus → cek satu order',
+   '│ orderstatusbulk → cek banyak order',
+   '├── 📲 CONTOH ORDER',
+   '│ action: placeimeiorder',
+   '│ service: 3b / 1b / 3bs / 3bd',
+   '│ imei: 354542501034022',
+   '│ + username dan apiaccesskey',
+   '├── 📤 CONTOH RESPONSE',
+   '│ {"SUCCESS":{"ORDERID":"DH...","STATUS":"PROCESSING"}}',
+   '├── 🔎 CEK STATUS',
+   '│ action: orderstatus',
+   '│ orderid: DH...',
+   '│ SUCCESS / FAILED / PROCESSING',
+   '│ CANCELLED → owner reply /cancel',
+   '├── ⏳ PROSES',
+   '│ Order tetap PROCESSING sampai',
+   '│ AirBot membalas atau owner cancel.',
+   '│ Tidak ada timeout otomatis.',
+   '│ Biaya hanya jika SUCCESS.',
+   '├── 🛠️ COMMANDS',
+   '│ /api status • /api reset',
+   '│ /api on|off (owner)',
+   '│ /api global on|off (owner)',
+   '╰── /api docs • SUPER-BOT'
+  ].join('\\n').replace(/\\\\n/g,'\\n'));
+ }
  if(a==='status')return reply('📡 DHRU API : '+(state.settings.apiGlobalEnabled?'GLOBAL ON':'GLOBAL OFF')+'\n👥 Grup : '+(getAccount(group)?.enabled===false?'OFF':'ON')+'\n💳 '+invoice(group).split('│ 💵 TOTAL : ')[1]?.split('\n')[0]);
- return reply('Perintah: /apikey, /api status, /api reset, /api reset confirm, /api on|off (owner), /api global on|off (owner)');
+ return reply('Perintah: /apikey, /api docs, /api status, /api reset, /api reset confirm, /api on|off (owner), /api global on|off (owner)');
 }};
