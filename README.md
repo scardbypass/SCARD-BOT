@@ -77,7 +77,7 @@ Jangan commit `.env`. **Tidak ada API key dalam chat, invoice, maupun source**. 
 | `/payment 3bs confirm` | Owner di grup seller | Tandai lunas hanya tagihan 3BS |
 | `/payment all confirm` | Owner di grup seller | Tandai lunas semua tagihan |
 
-Operator mana pun di grup operator terdaftar bisa **reply pesan order bot** dengan `DONE` atau `FAILED`. Reply harus menunjuk pesan order asli, bukan teks bebas tanpa reply. Nomor bot sendiri tidak diproses sebagai perintah reply agar tidak berulang.
+**Alur AirBot:** setelah status CEIR `UNKNOWN`, SUPER-BOT mengirim perintah mentah `/<layanan> <IMEI>` ke grup operator layanan tersebut (contoh `/3b 354542501034022`). AirBot memproses dan **reply pesan perintah itu** dengan `Success✅` + IMEI, `Failed❌` + IMEI, atau `Tidak tersedia (Gangguan atau CLOSE)`. SUPER-BOT hanya menerima reply yang cocok dengan ID pesan order, grup operator, dan (bila disebutkan) IMEI. `SUCCESS` menambah tagihan, sedangkan `FAILED` dan `Tidak tersedia` tidak ditagih. Pesan tanpa reply tidak akan mengubah order. Pastikan AirBot benar-benar membalas pesan tersebut menggunakan fitur reply WhatsApp.
 
 **Penagihan**: sukses menambah outstanding dengan harga saat order dibuat; `FAILED` tidak ditagih. Invoice outstanding otomatis dikirim **21.00 WIB** setiap hari selama masih ada tagihan. Hanya owner boleh menandai lunas lewat `/payment ... confirm`. Pending tidak ditagih; sukses setelah pelunasan masuk tagihan baru.
 
