@@ -75,7 +75,7 @@ module.exports={commands:['apikey','api'],registered:false,async run({msg,reply,
    '│ /api on|off (owner)',
    '│ /api global on|off (owner)',
    '╰── /api docs • SUPER-BOT'
-  ].join('\\n').replace(/\\\\n/g,'\\n'));
+  ].join('\n'));
  }
  if(a==='status')return reply('📡 DHRU API : '+(state.settings.apiGlobalEnabled?'GLOBAL ON':'GLOBAL OFF')+'\n👥 Grup : '+(getAccount(group)?.enabled===false?'OFF':'ON')+'\n💳 '+invoice(group).split('│ 💵 TOTAL : ')[1]?.split('\n')[0]);
  return reply('Perintah: /apikey, /api docs, /api status, /api reset, /api reset confirm, /api on|off (owner), /api global on|off (owner)');
