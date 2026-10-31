@@ -16,10 +16,10 @@ module.exports={commands:['menu','help'],registered:false,async run({reply,isOwn
     lines.push(row('/'+available[0]+' invoice','Lihat tagihan'));
    }
    if(state.settings.apiGlobalEnabled){
-    lines.push('│','├─ 🌐 *DHRU API*',row('/apikey','Kredensial dikirim privat'),row('/api docs','Panduan integrasi'),row('/api status','Status layanan'));
+    lines.push('│','├─ 🌐 *DHRU API*',row('/apikey','Lihat akses API grup'),row('/api docs','Panduan integrasi'),row('/api status','Status layanan'));
    }
   }else lines.push('│','│ 🔒 Grup belum terdaftar sebagai seller.');
-  lines.push('│','│ _Menu pengaturan owner tidak ditampilkan di grup._');
+
  }else{
   lines.push('│','├─ 🎬 *MEDIA*',row('/download','Unduh video'),row('/audio','Unduh audio'),row('/stiker','Buat stiker'),row('/lihat','Lihat media sekali lihat'),'│','├─ 🌐 *UTILITAS*',row('/whois','Informasi domain'),row('/statusweb','Status website'));
   if(isOwner){
