@@ -15,7 +15,7 @@ module.exports={
 
     if(!isOwner){
       return reply([
-        '╭─ *SUPER-BOT ACCOUNT*',
+        '╭─ *CUAN-BOT ACCOUNT*',
         line('WhatsApp',accountPhone||'-'),
         line('Level',String(user?.role||'MEMBER').toUpperCase()),
         line('Saldo',formatRupiah(user?.balance||0)),
@@ -36,7 +36,7 @@ module.exports={
     const show=(k,value)=>isProviderEnabled(k)?value:'⚫ OFF'
 
     return reply([
-      '╭───〔 *SUPER-BOT ACCOUNT* 〕',
+      '╭───〔 *CUAN-BOT ACCOUNT* 〕',
       '│',
       `│ 👤 *OWNER PROFILE*`,
       `│  • WhatsApp : ${accountPhone||'-'}`,
@@ -61,7 +61,7 @@ module.exports={
       `│    ${show('orderkuota',orderKuota===null?'Tidak terhubung':formatRupiah(orderKuota.balance))}`,
       '│',
       '╰───〔 *CONNECTED* 〕',
-      '_SUPER-BOT • Account Center_'
+      '_CUAN-BOT • Account Center_'
     ].join('\n'))
   }
 }
