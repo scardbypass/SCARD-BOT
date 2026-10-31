@@ -6,7 +6,7 @@ module.exports={commands:['menu','help'],registered:false,async run({reply,isOwn
  const chat=msg?.key?.remoteJid||'';
  const inGroup=chat.endsWith('@g.us');
  const seller=inGroup?state.settings.sellerGroups[chat]:null;
- const lines=['╭──〔 *PROVIDER PUSAT* 〕','│ _Seller Service Center_','│','├─ 📌 *MENU UTAMA*',row('/akun','Profil & saldo'),row('/help','Tampilkan menu')];
+ const lines=['╭──〔 *PROVIDER PUSAT* 〕','│ _Seller Service Center_','│','├─ 📌 *MENU UTAMA*',row('/help','Tampilkan menu')];
  if(inGroup){
   if(seller){
    const available=services.filter(s=>allowed(s,chat)&&price(s,chat)>0);
@@ -21,6 +21,7 @@ module.exports={commands:['menu','help'],registered:false,async run({reply,isOwn
   }else lines.push('│','│ 🔒 Grup belum terdaftar sebagai seller.');
 
  }else{
+  lines.push(row('/akun','Profil & saldo pribadi'));
   lines.push('│','├─ 🎬 *MEDIA*',row('/download','Unduh video'),row('/audio','Unduh audio'),row('/stiker','Buat stiker'),row('/lihat','Lihat media sekali lihat'),'│','├─ 🌐 *UTILITAS*',row('/whois','Informasi domain'),row('/statusweb','Status website'));
   if(isOwner){
    lines.push('│','├─ 👑 *OWNER CONTROL*',row('/3b add','Daftarkan grup seller'),row('/3b operator set','Atur operator'),row('/3b harga global 25000','Harga global'),row('/api global on','Aktifkan DHRU'),row('/provider','Pengaturan provider'),row('/monitor','Monitor website'),row('/saldoceir','Saldo provider'),row('/vps','Status server'),row('/backup','Backup bot'),row('/logs','Log bot'));
