@@ -34,26 +34,26 @@ module.exports={commands:['menu','help'],registered:false,async run({reply,isOwn
     lines.push('│ '+icon+' '+String(o.service||'-').toUpperCase()+' • '+masked);
    }
    lines.push('│','├── 🕒 *JAM OPERASIONAL • WIB*');
-   const available=services.filter(s=>allowed(s,jid)&&price(s,jid)>0);
-   if(!available.length)lines.push('│ _Belum ada layanan yang aktif._');
-   else for(const service of available){
+   const activeServices=services.filter(s=>allowed(s,jid)&&price(s,jid)>0);
+   if(!activeServices.length)lines.push('│ _Belum ada layanan yang aktif._');
+   else for(const service of activeServices){
     const hours=state.settings.operatingHours?.[service];
     const period=hours?.enabled?(hours.open+'–'+hours.close):'24 jam';
     const status=operational(service)?'🟢 BUKA':'🔴 TUTUP';
     lines.push('│ '+service.toUpperCase()+'  '+period+' • '+status);
    }
-   if(available.length)section(lines,'📱 *ORDER & TAGIHAN*',[
-    ...available.map(service=>['/'+service,'Order IMEI']),
-    ['/'+available[0]+' invoice','Lihat tagihan grup']
+   if(activeServices.length)section(lines,'📱 *ORDER & TAGIHAN*',[
+    ...activeServices.map(service=>['/'+service,'Order IMEI']),
+    ['/'+activeServices[0]+' invoice','Lihat tagihan grup']
    ]);
-   section(lines,'💰 *KEUANGAN*',[['/saldo','Saldo & metode'],['/mutasi','Riwayat saldo'],['/invoice','Tagihan POSTPAID']]);
+   section(lines,'💰 *KEUANGAN GRUP*',[['/saldo','Cek saldo grup'],['/mutasi','Riwayat transaksi'],['/invoice','Cek invoice']]);
+   if(isOwner)section(lines,'👑 *OWNER • PEMBAYARAN*',[['/metode','Lihat metode aktif'],['/metode pay','Bayar otomatis dari saldo'],['/metode after','Tempo • tagihan invoice'],['/saldo add 100000','Tambah saldo grup'],['/saldo kurang 50000','Kurangi saldo grup'],['/payment all confirm','Tandai invoice lunas']]);
    section(lines,'ℹ️ *INFORMASI*',[['/menu','Refresh dashboard']]);
   } }else{
   section(lines,'👤 *AKUN*',[['/akun','Profil & saldo pribadi'],['/menu','Tampilkan menu']]);
   section(lines,'🎬 *MEDIA*',[['/download','Unduh video'],['/audio','Unduh audio'],['/stiker','Buat stiker'],['/lihat','Lihat sekali lihat']]);
   section(lines,'🌐 *UTILITAS*',[['/whois','Informasi domain'],['/statusweb','Status website']]);
   if(isOwner){
-   section(lines,'👑 *OWNER • SALDO*',[['/metode prepaid','Gunakan saldo grup'],['/metode postpaid','Gunakan invoice'],['/saldo add 100000','Top up saldo'],['/saldo kurang 50000','Koreksi saldo']]);
    section(lines,'👑 *OWNER • SELLER*',[['/3b add','Daftarkan grup seller'],['/3b del','Hapus grup seller'],['/3b on / off','Aktif/nonaktif layanan'],['/3b harga 20000','Harga seller'],['/3b harga global 25000','Harga global'],['/3b bank BCA 123 NAMA','Rekening invoice'],['/payment all','Konfirmasi pembayaran'],['/jam','Jam operasional']]);
    section(lines,'⚙️ *OWNER • OPERATOR*',[['/3b operator set','Operator 3B'],['/1b operator set','Operator 1B'],['/3bs operator set','Operator 3BS'],['/3bd operator set','Operator 3BD']]);
    section(lines,'🔐 *OWNER • API*',[['/api on / off','API seller'],['/api global on / off','API seluruh seller'],['/api reset confirm','Rotasi API key (di grup seller)']]);
