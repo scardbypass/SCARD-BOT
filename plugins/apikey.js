@@ -62,7 +62,7 @@ module.exports={commands:['apikey','api'],registered:false,async run({sock,msg,r
   const endpoint=ENDPOINT;
   return reply([
    '╭──〔 📘 DHRU API DOCS 〕',
-   '│ 🤖 SUPER-BOT • POSTPAID',
+   '│ 🤖 CUAN-BOT • POSTPAID',
    '│ 🌐 '+endpoint,
    '│ 📡 Method: POST',
    '│ 📦 Body: JSON / form-urlencoded',
@@ -95,7 +95,7 @@ module.exports={commands:['apikey','api'],registered:false,async run({sock,msg,r
    '│ Biaya hanya jika SUCCESS.',
    '├── 🛠️ COMMANDS',
    '│ /api status • /apikey',
-   '╰── /api docs • SUPER-BOT'
+   '╰── /api docs • CUAN-BOT'
   ].join('\n'));
  }
  if(a==='status')return reply('📡 DHRU API : '+(state.settings.apiGlobalEnabled?'GLOBAL ON':'GLOBAL OFF')+'\n👥 Grup : '+(getAccount(group)?.enabled===false?'OFF':'ON')+'\n💳 '+invoice(group).split('│ 💵 TOTAL : ')[1]?.split('\n')[0]);
