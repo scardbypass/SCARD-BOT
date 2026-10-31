@@ -6,10 +6,11 @@ module.exports={commands:['saldo','metode','mutasi','invoice'],registered:false,
  const w=wallet(g),cmd=command.toLowerCase(),action=String(args[0]||'').toLowerCase();
  if(cmd==='metode'){
   if(!isOwner)return reply('❌ Khusus owner.');
-  if(!['prepaid','postpaid'].includes(action))return reply('Metode: '+w.mode.toUpperCase()+'\nGunakan /metode prepaid atau /metode postpaid');
+  if(!['prepaid','postpaid'].includes(action))return reply(['╭──〔 *CUAN-BOT • METODE* 〕','│ 💳 Aktif: '+w.mode.toUpperCase(),'│','│ /metode prepaid','│ ↳ Potong saldo grup saat SUCCESS','│','│ /metode postpaid','│ ↳ Tagihan invoice saat SUCCESS','│','│ 👑 Switch hanya untuk owner','╰── CUAN-BOT'].join('\n'));
   if(Object.keys(w.holds).length||state.orders.some(o=>o.group===g&&['checking','pending','processing'].includes(o.status)))return reply('❌ Masih ada order aktif. Tunggu selesai.');
   if(action==='prepaid'&&state.orders.some(o=>o.group===g&&o.status==='success'&&!o.paidAt&&o.paymentMode!=='prepaid'))return reply('❌ Lunasi invoice POSTPAID lama terlebih dahulu.');
-  w.mode=action;save();return reply('✅ Metode pembayaran: '+action.toUpperCase());
+  if(w.mode===action)return reply('ℹ️ Metode '+action.toUpperCase()+' sudah aktif.');
+  w.mode=action;save();return reply('✅ Metode pembayaran grup berhasil diubah ke '+action.toUpperCase()+'\n'+(action==='prepaid'?'💰 Saldo tersedia: '+rup(available(g)):'🧾 Order sukses berikutnya masuk invoice.'));
  }
  if(cmd==='saldo'){
   if(['add','kurang'].includes(action)){
