@@ -1,8 +1,31 @@
 const {loadPlugins}=require('../lib/pluginLoader');
-const db=require('../lib/database');
-const item=(cmd,desc)=>'│ ◈ *'+cmd+'*\n│    _'+desc+'_';
-module.exports={commands:['menu','help'],registered:false,async run({reply,isOwner}){
-const lines=['╭───〔 *SUPER-BOT* 〕','│ _WhatsApp Automation Center_','│','├──〔 👤 *ACCOUNT* 〕',item('/akun','Profil & saldo'),item('/groupinfo','Informasi grup'),'│','├──〔 🎬 *MEDIA* 〕',item('/download','Video TikTok, IG, FB, YouTube'),item('/audio','Unduh MP3'),item('/stiker','Buat stiker'),item('/lihat','Lihat media sekali lihat'),'│','├──〔 🌐 *WEB* 〕',item('/whois','Informasi domain'),item('/statusweb','Cek status website'),'│','├──〔 📱 *IMEI CENTER* 〕',item('/3b','Harga & order 3B'),item('/1b','Harga & order 1B'),item('/3bs','Harga & order 3BS'),item('/3bd','Harga & order 3BD'),item('/3b invoice','Tagihan grup'),item('/apikey','Buat / lihat DHRU API key'),item('/api docs','Dokumentasi DHRU API'),item('/api status','Status DHRU API'),item('/api reset','Reset API key')];
-if(isOwner)lines.push('│','├──〔 👑 *OWNER* 〕',item('/3b add','Daftarkan grup seller'),item('/api on /api off','DHRU API grup'),item('/api global on /api global off','DHRU API semua grup'),item('/3b operator set','Tetapkan grup operator 3B'),item('/1b operator set','Tetapkan grup operator 1B'),item('/3bs operator set','Tetapkan grup operator 3BS'),item('/3bd operator set','Tetapkan grup operator 3BD'),item('/3b harga global 25000','Harga global per layanan'),item('/3b harga 20000','Harga khusus grup'),item('/3b bank BCA 1234567890 NAMA','Rekening invoice'),item('/payment all','Konfirmasi pelunasan grup'),item('/monitor','Website monitor'),item('/saldoceir','Saldo provider'),item('/provider','Pengaturan provider'),item('/airbot 100000','Deposit AirBot'),item('/depoapi','Konfirmasi topup'),item('/aion /aioff','Gemini AI'),item('/vps','Status VPS'),item('/clear','Bersihkan file sementara'),item('/logs','Log PM2'),item('/updatebot','Update dari GitHub'),item('/cekupdate','Cek dependency'),item('/backup','Backup bot'),item('/promosi','Broadcast promosi'),item('/importwa','Export subscriber'),item('/getid','ID grup'),item('/nomergrup','Export nomor grup'),'│','├──〔 📡 *STATUS* 〕','│ 🟢 Bot ONLINE','│ 🧩 Plugins '+loadPlugins().length);
-lines.push('╰── *SUPER-BOT* • '+(isOwner?'OWNER':'MEMBER'));return reply(lines.join('\n'))
+const {state,allowed,operational,price}=require('../lib/imeiCenter/store');
+const services=['3b','1b','3bs','3bd'];
+const row=(command,description)=>'│  • *'+command+'* — '+description;
+module.exports={commands:['menu','help'],registered:false,async run({reply,isOwner,msg}){
+ const chat=msg?.key?.remoteJid||'';
+ const inGroup=chat.endsWith('@g.us');
+ const seller=inGroup?state.settings.sellerGroups[chat]:null;
+ const lines=['╭──〔 *PROVIDER PUSAT* 〕','│ _Seller Service Center_','│','├─ 📌 *MENU UTAMA*',row('/akun','Profil & saldo'),row('/help','Tampilkan menu')];
+ if(inGroup){
+  if(seller){
+   const available=services.filter(s=>allowed(s,chat)&&price(s,chat)>0);
+   if(available.length){
+    lines.push('│','├─ 📱 *LAYANAN IMEI*');
+    for(const s of available)lines.push(row('/'+s,'Cek harga & order'+(operational(s)?'':' (tutup)')));
+    lines.push(row('/3b invoice','Lihat tagihan'));
+   }
+   if(state.settings.apiGlobalEnabled){
+    lines.push('│','├─ 🌐 *DHRU API*',row('/apikey','Kredensial dikirim privat'),row('/api docs','Panduan integrasi'),row('/api status','Status layanan'));
+   }
+  }else lines.push('│','│ 🔒 Grup belum terdaftar sebagai seller.');
+  lines.push('│','│ _Menu pengaturan owner tidak ditampilkan di grup._');
+ }else{
+  lines.push('│','├─ 🎬 *MEDIA*',row('/download','Unduh video'),row('/audio','Unduh audio'),row('/stiker','Buat stiker'),row('/lihat','Lihat media sekali lihat'),'│','├─ 🌐 *UTILITAS*',row('/whois','Informasi domain'),row('/statusweb','Status website'));
+  if(isOwner){
+   lines.push('│','├─ 👑 *OWNER CONTROL*',row('/3b add','Daftarkan grup seller'),row('/3b operator set','Atur operator'),row('/3b harga global 25000','Harga global'),row('/api global on','Aktifkan DHRU'),row('/provider','Pengaturan provider'),row('/monitor','Monitor website'),row('/saldoceir','Saldo provider'),row('/vps','Status server'),row('/backup','Backup bot'),row('/logs','Log bot'));
+  }
+ }
+ lines.push('│','╰── *PROVIDER PUSAT*');
+ return reply(lines.join('\n'));
 }};
