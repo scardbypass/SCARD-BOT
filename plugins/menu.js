@@ -13,7 +13,7 @@ module.exports={commands:['menu','help'],registered:false,async run({reply,isOwn
    if(available.length){
     lines.push('│','├─ 📱 *LAYANAN IMEI*');
     for(const s of available)lines.push(row('/'+s,'Cek harga & order'+(operational(s)?'':' (tutup)')));
-    lines.push(row('/3b invoice','Lihat tagihan'));
+    lines.push(row('/'+available[0]+' invoice','Lihat tagihan'));
    }
    if(state.settings.apiGlobalEnabled){
     lines.push('│','├─ 🌐 *DHRU API*',row('/apikey','Kredensial dikirim privat'),row('/api docs','Panduan integrasi'),row('/api status','Status layanan'));
