@@ -1,4 +1,4 @@
-const {state,allowed,operational,price}=require('../lib/imeiCenter/store');
+const {state,allowed,operational,price,wallet,available}=require('../lib/imeiCenter/store');
 const services=['3b','1b','3bs','3bd'];
 const item=(command,desc)=>'│  *'+command+'*  — '+desc;
 const section=(lines,title,entries)=>{if(!entries.length)return;lines.push('│','├── '+title,...entries.map(([c,d])=>item(c,d)))};
@@ -9,6 +9,7 @@ module.exports={commands:['menu','help'],registered:false,async run({reply,isOwn
  if(group){
   if(!seller){lines.push('│','│ 🔒 Grup belum terdaftar sebagai seller.');}
   else{
+   const w=wallet(jid);lines.push('│','├── 💳 *PEMBAYARAN GRUP*','│ Metode: '+w.mode.toUpperCase(),...(w.mode==='prepaid'?['│ Saldo tersedia: Rp'+available(jid).toLocaleString('id-ID'),'│ Saldo ditahan: Rp'+(w.balance-available(jid)).toLocaleString('id-ID')]:[]));
    const orders=(state.orders||[]).filter(o=>o.group===jid);
    const count=(...statuses)=>orders.filter(o=>statuses.includes(o.status)).length;
    const successful=count('success'),failed=count('failed','unavailable','rejected','cancelled');
@@ -45,12 +46,14 @@ module.exports={commands:['menu','help'],registered:false,async run({reply,isOwn
     ...available.map(service=>['/'+service,'Order IMEI']),
     ['/'+available[0]+' invoice','Lihat tagihan grup']
    ]);
+   section(lines,'💰 *KEUANGAN*',[['/saldo','Saldo & metode'],['/mutasi','Riwayat saldo'],['/invoice','Tagihan POSTPAID']]);
    section(lines,'ℹ️ *INFORMASI*',[['/menu','Refresh dashboard']]);
   } }else{
   section(lines,'👤 *AKUN*',[['/akun','Profil & saldo pribadi'],['/menu','Tampilkan menu']]);
   section(lines,'🎬 *MEDIA*',[['/download','Unduh video'],['/audio','Unduh audio'],['/stiker','Buat stiker'],['/lihat','Lihat sekali lihat']]);
   section(lines,'🌐 *UTILITAS*',[['/whois','Informasi domain'],['/statusweb','Status website']]);
   if(isOwner){
+   section(lines,'👑 *OWNER • SALDO*',[['/metode prepaid','Gunakan saldo grup'],['/metode postpaid','Gunakan invoice'],['/saldo add 100000','Top up saldo'],['/saldo kurang 50000','Koreksi saldo']]);
    section(lines,'👑 *OWNER • SELLER*',[['/3b add','Daftarkan grup seller'],['/3b del','Hapus grup seller'],['/3b on / off','Aktif/nonaktif layanan'],['/3b harga 20000','Harga seller'],['/3b harga global 25000','Harga global'],['/3b bank BCA 123 NAMA','Rekening invoice'],['/payment all','Konfirmasi pembayaran'],['/jam','Jam operasional']]);
    section(lines,'⚙️ *OWNER • OPERATOR*',[['/3b operator set','Operator 3B'],['/1b operator set','Operator 1B'],['/3bs operator set','Operator 3BS'],['/3bd operator set','Operator 3BD']]);
    section(lines,'🔐 *OWNER • API*',[['/api on / off','API seller'],['/api global on / off','API seluruh seller'],['/api reset confirm','Rotasi API key (di grup seller)']]);
