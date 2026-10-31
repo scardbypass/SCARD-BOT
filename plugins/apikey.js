@@ -20,13 +20,22 @@ module.exports={commands:['apikey','api'],registered:false,async run({sock,msg,r
  const a=String(args[0]||'').toLowerCase();
  if(command==='apikey'){
   const account=createAccount(group);
-  const content=['╭──〔 *PROVIDER PUSAT • DHRU* 〕','│','│ 👤 *Username*','│ '+account.username,'│','│ 🔑 *API Key*','│ '+account.key,'│','│ 🌐 *Endpoint*','│ '+ENDPOINT,'│','│ 📡 *Status:* '+(state.settings.apiGlobalEnabled&&account.enabled?'ACTIVE':'OFFLINE'),'│ 💳 *Billing:* POSTPAID','╰── *Simpan kredensial ini dengan aman*'].join('\\n');
-  const recipient=msg.key.participantPn||msg.key.senderPn||msg.key.participantAlt||msg.key.participant||msg.key.remoteJid;
-  if(group.endsWith('@g.us')){
-   if(!recipient||recipient.endsWith('@g.us')||recipient.endsWith('@lid'))return reply('🔐 Tidak dapat memastikan nomor pengirim. Minta admin mengirim kredensial secara privat.');
-   try{await sock.sendMessage(recipient,{text:content});return reply('🔐 Kredensial DHRU telah dikirim melalui chat pribadi. Jangan bagikan API key di grup.')}catch(e){console.error('[API KEY DM]',e.message);return reply('⚠️ Gagal mengirim kredensial secara privat. API key tidak ditampilkan di grup.')}
-  }
-  return reply(content);
+  return reply([
+   '╭──〔 *DHRU API • SELLER* 〕',
+   '│',
+   '│ 👤 *Username*',
+   '│ '+account.username,
+   '│',
+   '│ 🔑 *API Key*',
+   '│ '+account.key,
+   '│',
+   '│ 🌐 *Endpoint*',
+   '│ '+ENDPOINT,
+   '│',
+   '│ 📡 *Status:* '+(state.settings.apiGlobalEnabled&&account.enabled?'ACTIVE':'OFFLINE'),
+   '│ 💳 *Sistem:* POSTPAID',
+   '╰── *PROVIDER PUSAT*'
+  ].join('\\n'));
  }
  if(a==='global'){
   if(!isOwner)return reply('❌ Khusus owner.');
@@ -38,6 +47,7 @@ module.exports={commands:['apikey','api'],registered:false,async run({sock,msg,r
   const account=createAccount(group);account.enabled=a==='on';save();return reply('✅ DHRU API grup '+a.toUpperCase());
  }
  if(a==='reset'){
+  if(!isOwner)return reply('❌ Reset API key hanya untuk owner.');
   const account=getAccount(group);if(!account)return reply('❌ Buat dahulu dengan /apikey');
   if(args[1]!=='confirm')return reply('⚠️ API key lama akan langsung dinonaktifkan. Ketik /api reset confirm');
   account.key=newKey();account.resetAt=new Date().toISOString();save();const recipient=msg.key.participantPn||msg.key.senderPn||msg.key.participantAlt||msg.key.participant||msg.key.remoteJid;
@@ -80,12 +90,10 @@ module.exports={commands:['apikey','api'],registered:false,async run({sock,msg,r
    '│ Tidak ada timeout otomatis.',
    '│ Biaya hanya jika SUCCESS.',
    '├── 🛠️ COMMANDS',
-   '│ /api status • /api reset',
-   '│ /api on|off (owner)',
-   '│ /api global on|off (owner)',
+   '│ /api status • /apikey',
    '╰── /api docs • SUPER-BOT'
   ].join('\n'));
  }
  if(a==='status')return reply('📡 DHRU API : '+(state.settings.apiGlobalEnabled?'GLOBAL ON':'GLOBAL OFF')+'\n👥 Grup : '+(getAccount(group)?.enabled===false?'OFF':'ON')+'\n💳 '+invoice(group).split('│ 💵 TOTAL : ')[1]?.split('\n')[0]);
- return reply('Perintah: /apikey, /api docs, /api status, /api reset, /api reset confirm, /api on|off (owner), /api global on|off (owner)');
+ return reply(isOwner?'Perintah: /apikey, /api docs, /api status, /api reset confirm, /api on|off, /api global on|off':'Perintah: /apikey, /api docs, /api status');
 }};
