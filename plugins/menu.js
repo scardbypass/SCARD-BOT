@@ -9,13 +9,44 @@ module.exports={commands:['menu','help'],registered:false,async run({reply,isOwn
  if(group){
   if(!seller){lines.push('│','│ 🔒 Grup belum terdaftar sebagai seller.');}
   else{
-   const active=services.filter(s=>allowed(s,jid)&&price(s,jid)>0);
-   section(lines,'📱 *LAYANAN IMEI*',active.map(s=>['/'+s,'Harga & order'+(operational(s)?'':' • Tutup')]));
-   if(active.length)section(lines,'🧾 *TAGIHAN*',[['/'+active[0]+' invoice','Lihat invoice grup']]);
-   if(state.settings.apiGlobalEnabled)section(lines,'🌐 *DHRU API*',[['/apikey','Lihat akses API seller'],['/api docs','Dokumentasi API'],['/api status','Status API']]);
-   section(lines,'ℹ️ *INFORMASI*',[['/menu','Tampilkan menu']]);
-  }
- }else{
+   const orders=(state.orders||[]).filter(o=>o.group===jid);
+   const count=(...statuses)=>orders.filter(o=>statuses.includes(o.status)).length;
+   const successful=count('success'),failed=count('failed','unavailable','rejected','cancelled');
+   const processing=count('checking','pending','processing');
+   const total=orders.length;
+   const idr=n=>'Rp'+Number(n||0).toLocaleString('id-ID');
+   const completed=orders.filter(o=>o.status==='success');
+   const revenue=completed.reduce((sum,o)=>sum+Number(o.price||0),0);
+   lines.push('│','├── 📊 *STATISTIK UNLOCK*',
+    '│ 📦 Total order     : '+total,
+    '│ ✅ Berhasil       : '+successful,
+    '│ ❌ Gagal / batal  : '+failed,
+    '│ ⏳ Dalam proses  : '+processing,
+    '│ 💰 Nilai berhasil: '+idr(revenue));
+   const latest=orders.slice().sort((x,y)=>Date.parse(y.createdAt||0)-Date.parse(x.createdAt||0)).slice(0,5);
+   lines.push('│','├── 🧾 *RIWAYAT TERAKHIR*');
+   if(!latest.length)lines.push('│ _Belum ada riwayat unlock._');
+   else for(const o of latest){
+    const icon=o.status==='success'?'✅':['failed','unavailable','rejected','cancelled'].includes(o.status)?'❌':'⏳';
+    const imei=String(o.imei||'');
+    const masked=imei.length===15?imei.slice(0,4)+'•••••••'+imei.slice(-4):'IMEI tersembunyi';
+    lines.push('│ '+icon+' '+String(o.service||'-').toUpperCase()+' • '+masked);
+   }
+   lines.push('│','├── 🕒 *JAM OPERASIONAL • WIB*');
+   const available=services.filter(s=>allowed(s,jid)&&price(s,jid)>0);
+   if(!available.length)lines.push('│ _Belum ada layanan yang aktif._');
+   else for(const service of available){
+    const hours=state.settings.operatingHours?.[service];
+    const period=hours?.enabled?(hours.open+'–'+hours.close):'24 jam';
+    const status=operational(service)?'🟢 BUKA':'🔴 TUTUP';
+    lines.push('│ '+service.toUpperCase()+'  '+period+' • '+status);
+   }
+   if(available.length)section(lines,'📱 *ORDER & TAGIHAN*',[
+    ...available.map(service=>['/'+service,'Order IMEI']),
+    ['/'+available[0]+' invoice','Lihat tagihan grup']
+   ]);
+   section(lines,'ℹ️ *INFORMASI*',[['/menu','Refresh dashboard']]);
+  } }else{
   section(lines,'👤 *AKUN*',[['/akun','Profil & saldo pribadi'],['/menu','Tampilkan menu']]);
   section(lines,'🎬 *MEDIA*',[['/download','Unduh video'],['/audio','Unduh audio'],['/stiker','Buat stiker'],['/lihat','Lihat sekali lihat']]);
   section(lines,'🌐 *UTILITAS*',[['/whois','Informasi domain'],['/statusweb','Status website']]);
