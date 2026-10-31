@@ -10,6 +10,7 @@ module.exports={
   registered:true,
   menu:'akun',
   async run({sock,msg,reply,user,isOwner,phone}){
+    if(String(msg?.key?.remoteJid||'').endsWith('@g.us'))return reply('🔒 Informasi akun bersifat pribadi. Gunakan /akun melalui chat pribadi bot.');
     const accountPhone=user?.phone||phone||String(process.env.OWNER_NUMBER||'').replace(/\D/g,'')
 
     if(!isOwner){
