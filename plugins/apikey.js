@@ -21,21 +21,25 @@ module.exports={commands:['apikey','api'],registered:false,async run({sock,msg,r
  if(command==='apikey'){
   const account=createAccount(group);
   return reply([
-   '╭──〔 *DHRU API • SELLER* 〕',
-   '│',
-   '│ 👤 *Username*',
-   '│ '+account.username,
-   '│',
-   '│ 🔑 *API Key*',
-   '│ '+account.key,
-   '│',
-   '│ 🌐 *Endpoint*',
-   '│ '+ENDPOINT,
-   '│',
-   '│ 📡 *Status:* '+(state.settings.apiGlobalEnabled&&account.enabled?'ACTIVE':'OFFLINE'),
-   '│ 💳 *Sistem:* POSTPAID',
-   '╰── *PROVIDER PUSAT*'
-  ].join('\\n'));
+   '🌐 *PROVIDER PUSAT*',
+   '━━━━━━━━━━━━━━━━',
+   '🔐 *DHRU API • SELLER*',
+   '',
+   '👤 *USERNAME*',
+   account.username,
+   '',
+   '🔑 *API KEY*',
+   account.key,
+   '',
+   '🔗 *ENDPOINT*',
+   ENDPOINT,
+   '',
+   '━━━━━━━━━━━━━━━━',
+   '📡 Status : '+(state.settings.apiGlobalEnabled&&account.enabled?'🟢 ACTIVE':'🔴 OFFLINE'),
+   '💳 Billing : POSTPAID',
+   '━━━━━━━━━━━━━━━━',
+   '🔒 _Simpan API key dengan aman._'
+  ].join('\n'));
  }
  if(a==='global'){
   if(!isOwner)return reply('❌ Khusus owner.');
