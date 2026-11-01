@@ -1,8 +1,8 @@
 const {state,save,wallet,available,adjust}=require('../lib/imeiCenter/store');
 const rup=n=>'Rp'+Number(n||0).toLocaleString('id-ID');
-module.exports={commands:['saldo','metode','mutasi','invoice'],registered:false,async run({msg,reply,command,args,isOwner,phone}){
+module.exports={commands:['saldo','mutasi','invoice'],registered:false,async run({msg,reply,command,args,isOwner,phone}){
  const g=msg?.key?.remoteJid||'';if(!g.endsWith('@g.us'))return reply('❌ Perintah hanya untuk grup seller.');
- if(!state.settings.sellerGroups[g])return reply('🔒 Grup seller belum terdaftar.');
+ if(!state.settings.sellerGroups[g])return;
  const w=wallet(g),cmd=command.toLowerCase(),action=String(args[0]||'').toLowerCase();
  if(cmd==='metode'){
   if(!isOwner)return reply('❌ Khusus owner.');
