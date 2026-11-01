@@ -5,8 +5,9 @@ module.exports={
  commands:['metode','metodebayar'],
  registered:false,
  ownerOnly:true,
- async run({args,reply,isOwner}){
+ async run({args,reply,isOwner,msg}){
   if(!isOwner)return reply('❌ Hanya owner yang boleh mengubah metode pembayaran.');
+  if(String(msg?.key?.remoteJid||'').endsWith('@g.us'))return reply('🔒 Pengaturan pembayaran hanya melalui chat pribadi owner dengan CUAN-BOT.');
   const group=String(args[0]||'').trim();
   const mode=String(args[1]||'').trim().toLowerCase();
   if(!/^\d{8,25}@g\.us$/.test(group))return reply('💳 *METODE PEMBAYARAN REMOTE*\nFormat: /metode ID_GRUP prepaid|postpaid\nContoh: /metode 120363123456789012@g.us prepaid');
