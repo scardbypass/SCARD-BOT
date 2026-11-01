@@ -1,4 +1,5 @@
 const db=require('../lib/database')
+const {getAirbotWaBalance}=require('../lib/airbotBridge')
 const {formatRupiah}=require('../lib/utils')
 const {getRoamerAccount,roamerBalance,getSickwBalance,getAirbotBalance,getEsimAccessBalance,getOrderKuotaBalance}=require('../lib/providers')
 
@@ -30,6 +31,7 @@ module.exports={
       getEsimAccessBalance(),
       getOrderKuotaBalance()
     ])
+    const airbotWa=await getAirbotWaBalance(sock)
     const rb=roamerBalance(roamer)
 
     return reply([
@@ -47,6 +49,9 @@ module.exports={
       '│',
       `│ 💰 AirBot`,
       `│    ${airbot===null?'Tidak terhubung':formatRupiah(airbot.balance)}`,
+      '│',
+      `│ 💬 AirBot WA`,
+      `│    ${airbotWa===null?'Tidak tersedia':formatRupiah(airbotWa)}`,
       '│',
       `│ 🌐 SickW`,
       `│    ${sickw===null?'Tidak terhubung':`${formatRupiah(sickw.idr)}  •  ${sickw.usd.toFixed(3)}`}`,
