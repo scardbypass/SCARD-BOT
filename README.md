@@ -160,7 +160,8 @@ sudo apt install -y git curl ffmpeg python3 python3-pip zip
 Downloader membutuhkan **yt-dlp**:
 
 ```bash
-sudo apt install -y python3-venv\npython3 -m venv /opt/yt-dlp-venv\n/opt/yt-dlp-venv/bin/pip install -U "yt-dlp[default]"
+sudo apt install -y python3-venv
+python3 -m venv /opt/yt-dlp-venv\n/opt/yt-dlp-venv/bin/pip install -U "yt-dlp[default]"
 ```
 
 Jika distro menolak instalasi pip global, install yt-dlp menggunakan metode resmi yang sesuai distro/server Anda.
@@ -202,8 +203,8 @@ pm2 -v
 
 ```bash
 cd /root
-git clone https://github.com/scardbypass/SUPER-BOT.git
-cd SUPER-BOT
+git clone https://github.com/scardbypass/SCARD-BOT.git
+cd SCARD-BOT
 ```
 
 ## 6. Install dependency Node.js
@@ -334,7 +335,7 @@ QR akan tampil di terminal. Buka WhatsApp → **Perangkat tertaut → Tautkan pe
 Stop bot dan hapus session lama:
 
 ```bash
-pm2 stop SUPER-BOT
+pm2 stop scardproject
 rm -rf sessions
 mkdir -p sessions
 npm start
@@ -347,8 +348,8 @@ Setelah berhasil login, hentikan proses foreground dengan <kbd>Ctrl</kbd> + <kbd
 # ♾️ Menjalankan 24/7 dengan PM2
 
 ```bash
-cd /root/SUPER-BOT
-pm2 start index.js --name SUPER-BOT
+cd /root/scardproject
+pm2 start index.js --name scardproject
 pm2 save
 pm2 startup
 ```
@@ -363,9 +364,9 @@ pm2 save
 
 ```bash
 pm2 status
-pm2 logs SUPER-BOT
-pm2 restart SUPER-BOT
-pm2 stop SUPER-BOT
+pm2 logs scardproject
+pm2 restart scardproject
+pm2 stop scardproject
 ```
 
 ---
@@ -712,11 +713,11 @@ module.exports = {
 # 🔄 Update SUPER-BOT V2
 
 ```bash
-cd /root/SUPER-BOT
+cd /root/scardproject
 git checkout v2
 git pull origin v2
 npm install
-pm2 restart SUPER-BOT
+pm2 restart scardproject
 ```
 
 `npm install` penting jika update membawa dependency baru.
@@ -731,7 +732,7 @@ pm2 restart SUPER-BOT
 Cek log:
 
 ```bash
-pm2 logs SUPER-BOT
+pm2 logs scardproject
 ```
 
 Pastikan command memang PUBLIC atau nomor sudah terdaftar. Command owner hanya bekerja untuk `OWNER_NUMBER` / role owner.
@@ -744,7 +745,7 @@ Pastikan command memang PUBLIC atau nomor sudah terdaftar. Command owner hanya b
 Jika ingin login ulang:
 
 ```bash
-pm2 stop SUPER-BOT
+pm2 stop scardproject
 rm -rf sessions
 mkdir -p sessions
 npm start
@@ -791,13 +792,13 @@ sudo apt install -y zip
 Restart:
 
 ```bash
-pm2 restart SUPER-BOT
+pm2 restart scardproject
 ```
 
 Jika PM2 mempertahankan environment lama, gunakan:
 
 ```bash
-pm2 restart SUPER-BOT --update-env
+pm2 restart scardproject --update-env
 ```
 
 </details>
@@ -825,6 +826,78 @@ Built for modular WhatsApp automation.
 
 </div>
 
-## DHRU API postpaid (v2)
+## 🔌 DHRU Fusion API — reseller IMEI (v2)
 
-Set `DHRU_PORT=3107`, `DHRU_BIND_HOST=127.0.0.1`, `DHRU_PUBLIC_URL=https://YOUR-DOMAIN/api/dhru`; configure HTTPS reverse proxy to `http://127.0.0.1:3107/api/dhru`. Every registered seller WhatsApp group has its own credentials: `/apikey` creates or shows its username/key; `/api reset confirm` rotates key; `/api status` shows status. Owner: `/api on|off` (group), `/api global on|off` (all). Orders share the existing IMEI processing and invoice system; no prepaid balance. POST JSON or form-encoded with `username`, `apiaccesskey`, `action`. Actions currently supported: `accountinfo`, `imeiservicelist`, `placeimeiorder` (`service=3b|1b|3bs|3bd`, `imei=15 digits`), `orderstatus` (`orderid`), `orderstatusbulk` (`orderids` comma-separated). Responses are JSON. **Important:** DHRU Fusion installations may require exact XML/JSON field shapes and service numeric IDs; validate compatibility before selling. API keys are shown to every member of a registered seller group by design; anyone with the key can create billable orders. Protect the HTTPS endpoint with rate limits at the reverse proxy. Do not expose the Node port publicly.
+DHRU tersedia pada endpoint publik HTTPS yang diarahkan ke service lokal `lib/dhruServer.js`. Pastikan reverse proxy mengarah ke port yang benar, misalnya `DHRU_PORT=3107` (nilai default kode). **Jangan mengasumsikan port 3108.**
+
+- Endpoint POST: `/api/dhru/api/index.php` (alias `/api/dhru`).
+- Autentikasi: `username` dan `apiaccesskey` milik grup seller.
+- Katalog `imeiservicelist`: format DHRU Fusion v6.1 `SUCCESS[0].LIST[category].SERVICES[id]`, hanya layanan yang diizinkan, memiliki operator, dan harga positif.
+- `accountinfo`: `SUCCESS[0].AccoutInfo`.
+- `placeimeiorder`: menerima `parameters` (JSON yang di-base64) berisi `ID` layanan dan `IMEI`; balasan sukses berisi `REFERENCEID`.
+- `getimeiorder`: cek status berdasarkan `parameters` dengan `ID` order. Alias legacy `orderstatus` tetap tersedia.
+- Pemesanan tetap memeriksa jadwal, saldo, izin seller, duplikasi, dan koneksi WhatsApp. Katalog bisa tetap tampil saat layanan sedang tutup.
+
+> [!CAUTION]
+> Katalog sudah berhasil tampil pada panel pengujian, tetapi kompatibilitas end-to-end order dan status belum terverifikasi. Uji dengan order yang sah dan pantau `pm2 logs scardproject`. Jangan membagikan API key atau respons yang memuat rahasia.
+
+## 📱 DigiPOS 1B — adapter browser (eksperimental)
+
+File: `lib/imeiCenter/digipos.js`. Adapter opsional untuk akun DigiPOS yang memang mengizinkan otomatisasi browser. Situs tujuan: `https://digipos.telkomsel.cloud/roamer.php`.
+
+**Status implementasi saat ini:**
+
+| Tahap | Status |
+|---|---|
+| Cek IMEI lewat CeirGo sebelum operator | Sudah ada di `lib/imeiCenter/core.js` |
+| Tolak `ROAMER`, `REGISTERED`, error/ambigu | Sudah ada |
+| Teruskan `UNKNOWN` ke grup operator 1B | Sudah ada |
+| Browser login DigiPOS dan simpan sesi | Adapter tersedia, belum teruji langsung |
+| Isi IMEI dan pilih 30 hari | Adapter tersedia, selector perlu validasi |
+| Kirim formulir otomatis | **Nonaktif secara default** |
+| Baca bukti keberhasilan DigiPOS | **Belum dibuat** |
+| Hubungkan adapter ke antrean operator 1B | **Belum dibuat** |
+| Settlement saldo berdasarkan hasil DigiPOS | **Belum dibuat** |
+
+### Instalasi dependensi opsional
+
+```bash
+cd /root/scardproject
+npm install playwright
+npx playwright install chromium
+```
+
+Simpan kredensial hanya di `.env` pada VPS, **bukan** GitHub atau chat:
+
+```dotenv
+DIGIPOS_1B_ENABLED=false
+DIGIPOS_USERNAME=
+DIGIPOS_PASSWORD=
+DIGIPOS_TIMEOUT_MS=45000
+DIGIPOS_SESSION_FILE=/root/scardproject/database/.digipos-session.json
+DIGIPOS_ALLOW_SUBMIT=false
+```
+
+Saat `DIGIPOS_1B_ENABLED=false`, adapter tidak melakukan aktivitas browser. Jika diaktifkan secara manual, fungsi `register(imei)` hanya menyiapkan formulir; tidak menekan Daftar. Jangan mengaktifkan `DIGIPOS_ALLOW_SUBMIT=true` di produksi sebelum hasil/konfirmasi situs dapat dibaca dan proses idempotensi diuji. Adapter belum dipanggil otomatis oleh `core.js`.
+
+Pastikan file sesi dan kredensial tidak masuk commit atau backup publik:
+
+```bash
+chmod 600 /root/scardproject/.env
+printf '\n/database/.digipos-session.json\n' >> .git/info/exclude
+```
+
+**Kebijakan kegagalan:** login ulang, timeout, perubahan tampilan, dan hasil yang tidak jelas harus masuk pemeriksaan manual. Klik tombol bukan bukti sukses. Jangan mengulangi pendaftaran tanpa memeriksa status agar tidak terjadi order ganda.
+
+## 🔄 Update aman pada VPS yang memiliki perubahan lokal
+
+```bash
+cd /root/scardproject
+git fetch origin v2
+git restore --source=origin/v2 -- README.md lib/imeiCenter/digipos.js
+node --check lib/imeiCenter/digipos.js
+pm2 status
+```
+
+Perintah di atas **hanya memperbarui README dan adapter DigiPOS**, tidak menyentuh database, sesi WhatsApp, atau perubahan lokal lain. Jangan menjalankan `git reset --hard` atau `git clean -fd` pada VPS aktif.
+
