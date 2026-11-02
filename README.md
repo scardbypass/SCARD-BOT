@@ -45,9 +45,83 @@ Pengaturan biaya CEIR dibuat terpisah dari biaya registrasi IMEI. Untuk order Wh
 
 Tarif awal yang disarankan adalah **Rp2.500 per IMEI**, tetapi mode default untuk grup lama adalah **FREE** agar tidak ada pemotongan mendadak. Setiap order menyimpan `ceirBilling` agar pengecekan berulang tidak mendebit ulang. Pemotongan prepaid membutuhkan saldo tersedia yang cukup; bila tidak cukup, order ditolak dan biaya belum ditagih. Mode OWNER adalah pembukuan pengeluaran, bukan transfer atau pemotongan saldo provider.
 
-**Catatan implementasi:** fungsi `ceirConfig` dan `chargeCeir` berada di `lib/imeiCenter/store.js`, dan dipanggil dari `lib/imeiCenter/core.js`. Pengaturan per grup tersimpan di `settings.sellerGroups[GROUP_JID].ceirBilling` dengan `mode` dan `fee`. Perintah WhatsApp khusus owner `/ceirsetting`, `/ceirmode`, `/ceirfee`, dan `/ceirlist` masih perlu diaktifkan dan diuji sebelum digunakan. Jangan menganggap menu tersebut sudah tersedia hanya karena aturan billing sudah disimpan di kode.
+**Implementasi:** `lib/imeiCenter/store.js` menyimpan konfigurasi dan ledger, `lib/imeiCenter/core.js` menjalankan cek CEIR, order, invoice dan pelunasan. `plugins/ceirsetting.js` mengatur tarif dan mode **hanya dari chat pribadi owner** dengan ID grup eksplisit. `plugins/menu.js` menampilkan perintah tersebut hanya di menu owner private. Konfigurasi tersimpan pada `settings.sellerGroups[GROUP_JID].ceirBilling`.
 
-**Perhatian:** ledger CEIR postpaid perlu dimasukkan ke laporan/invoice sebelum ditagihkan; cek saldo dan status order melalui pengujian staging sebelum produksi.
+**Catatan produksi:** pemasangan source di GitHub tidak otomatis memperbarui VPS. Jangan melakukan `git pull` atau `git reset --hard` pada server yang mempunyai perubahan lokal dan database transaksi. Uji saldo, ledger, status, dan idempotensi di staging sebelum mengaktifkan mode SELLER.
+
+
+---
+
+## Developer handover — DHRU, CEIR, IMEI, saldo, riwayat
+
+### Peta modul dan sumber data
+
+| Modul | Berkas | Tanggung jawab |
+|---|---|---|
+| WhatsApp router | `index.js` | Parsing pesan, otorisasi owner, plugin dispatch, AirBot reply |
+| Plugin loader | `lib/pluginLoader.js` | Menemukan perintah plugin |
+| Order 3B/1B/3BS/3BD | `lib/imeiCenter/core.js` | Validasi, cek CEIR, status order, invoice, pelunasan, notifikasi |
+| State, saldo, ledger | `lib/imeiCenter/store.js` | State JSON, wallet, hold, settle, release, biaya CEIR |
+| CEIR provider | `lib/imeiCenter/ceirgo.js` | Panggilan cek IMEI dan parsing status |
+| DHRU Fusion | `lib/dhruServer.js` | Autentikasi API, katalog, place order, status |
+| DigiPOS 1B | `lib/imeiCenter/digipos.js` | Pengiriman dan rekonsiliasi 1B; jangan samakan submitted dengan DONE |
+| CEIR settings | `plugins/ceirsetting.js` | Perintah owner di PC, per ID grup |
+| Invoice/saldo | `plugins/saldo.js` | Saldo, mutasi, invoice |
+| Data operasional | `database/imei-center.json` | Grup, order, saldo, hold, ledger, pembayaran; **jangan commit** |
+
+### CEIR dan order lifecycle
+
+1. WhatsApp atau DHRU membuat order dan memvalidasi layanan, grup, IMEI, harga, status operasional, serta saldo/hold sesuai mode pembayaran.
+2. CEIR memeriksa IMEI. `UNKNOWN` dapat diteruskan ke operator; `REGISTERED` dan `ROAMER` ditolak dengan biaya CEIR sesuai konfigurasi; error, timeout atau hasil ambigu **tidak boleh dianggap UNKNOWN**.
+3. Pada penolakan, release hold registrasi; `chargeCeir(order,status)` mencatat `order.ceirBilling` sebagai penanda idempotensi. Mode FREE tidak menagih, OWNER mencatat beban owner, SELLER prepaid mengurangi saldo tersedia dan SELLER postpaid masuk invoice.
+4. Untuk order lolos CEIR, 3B/3BS/3BD diteruskan ke grup operator yang dipetakan; 1B menggunakan adapter DigiPOS dan menunggu hasil final terverifikasi.
+5. Status `checking/pending/processing` bukan sukses. Hanya hasil final terverifikasi dapat menandai `success` dan menyelesaikan biaya registrasi. `failed/rejected/cancelled/unavailable` tidak boleh dianggap berhasil.
+6. `/invoice` memuat registrasi sukses belum dibayar dan biaya CEIR SELLER postpaid belum dibayar. `/payment all confirm` atau `/payment ceir confirm` (owner di grup seller sesuai implementasi core saat ini) menandai item yang ditagih sebagai dibayar.
+7. Riwayat dan audit perlu menjaga order ID, sumber `whatsapp`/`dhru`, IMEI, status, `paymentMode`, `paidAt`, `ceirBilling`, dan ledger. Jangan menghapus pending, outstanding, hold, atau transaksi yang masih perlu direkonsiliasi.
+
+### DHRU Fusion 6.1: kontrak dan verifikasi
+
+Endpoint: `POST /api/dhru` (alias `/api/dhru/api/index.php`); gunakan credential `username` dan `apiaccesskey` dari konfigurasi akun seller. Aksi yang diimplementasikan: `accountinfo`, `imeiservicelist`, `placeimeiorder`, `orderstatus`, `orderstatusbulk`; kompatibilitas nama `getimeiorder` dan `getimeiorderbulk` juga ditangani pada server. Cocokkan struktur respons dengan dokumentasi DHRU Fusion versi yang benar-benar digunakan seller, bukan hanya HTTP 200.
+
+- `imeiservicelist`: ID layanan stabil 101=3B, 102=1B, 103=3BS, 104=3BD. Listing bukan jaminan layanan sedang menerima order; pengecekan jam operasional dilakukan saat place order.
+- `placeimeiorder`: parameter dapat berupa form, JSON, XML PARAMETERS, atau representasi terenkode; validasi 15 digit, service ID, seller, saldo, dan duplicate sebelum meneruskan.
+- `orderstatus`: cari order berdasarkan ID **dan grup pemilik** agar seller lain tidak dapat melihat order. `STATUS=0` checking, `1` processing, `3` gagal/tidak ditemukan, `4` selesai; `CODE` hanya berisi hasil terverifikasi.
+- `orderstatusbulk`: batasi jumlah ID, isolasi per seller, pastikan respons per ID tidak tertukar.
+- Jangan memasukkan API key, raw body, cookie, session, atau IMEI lengkap ke log produksi. Gunakan redaksi pada diagnostics.
+
+### Perintah CEIR khusus PC owner
+
+```text
+/ceirlist
+/ceirsetting 120363xxxxxxxx@g.us
+/ceirmode 120363xxxxxxxx@g.us free
+/ceirmode 120363xxxxxxxx@g.us seller
+/ceirmode 120363xxxxxxxx@g.us owner
+/ceirfee 120363xxxxxxxx@g.us 2500
+```
+
+Mode default grup lama: `free`. Perubahan mode hanya memengaruhi order baru; histori yang sudah memiliki `ceirBilling` tidak dihitung ulang. Perintah owner di grup tidak boleh mengubah konfigurasi.
+
+### Uji regresi wajib sebelum deployment
+
+- Parsing DHRU form, JSON, XML, base64/URL encoded, parameter bertingkat, IMEI invalid dan service invalid.
+- DHRU orderstatus single/bulk dengan order valid, order tidak ada, dan cross-seller isolation.
+- 3B success/failed/timeout, reply operator tidak cocok, serta order duplikat.
+- 1B DigiPOS submitted vs DONE/FAILED, polling berulang, restart saat pending, notifikasi final tidak terkirim.
+- CEIR UNKNOWN, REGISTERED, ROAMER, error, timeout; mode FREE/SELLER/OWNER untuk prepaid dan postpaid.
+- CEIR fee dipanggil ulang dua kali pada order sama: hanya satu ledger/debit; saldo kurang tidak boleh menjadi debit negatif.
+- Invoice CEIR dan registrasi, pelunasan berulang, mutasi, backup/restore JSON dan restart.
+
+```bash
+node --check index.js
+node --check lib/dhruServer.js
+node --check lib/imeiCenter/core.js
+node --check lib/imeiCenter/store.js
+node --check plugins/ceirsetting.js
+node --test tests/*.test.js
+```
+
+**Deployment VPS yang sudah memiliki perubahan lokal:** backup `database/`, `sessions/`, `.env`, dan source lebih dulu. Jalankan `git fetch origin v2`, bandingkan `git diff`, integrasikan perubahan secara selektif, uji di salinan terpisah, baru restart PM2. Hindari menjalankan dua proses terhadap `database/imei-center.json` yang sama. **Pengujian runtime end-to-end dan verifikasi dokumentasi DHRU provider belum dinyatakan lulus hanya karena source sudah di-push.**
 
 ---
 
