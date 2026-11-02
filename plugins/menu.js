@@ -47,6 +47,7 @@ module.exports={commands:['menu','help'],registered:false,async run({reply,isOwn
     ['/'+activeServices[0]+' invoice','Lihat tagihan grup']
    ]);
    section(lines,'💰 *KEUANGAN GRUP*',[['/saldo','Cek saldo grup'],['/mutasi','Riwayat transaksi'],['/invoice','Cek invoice']]);
+   if(isOwner)section(lines,'🔍 *OWNER • CEIR BILLING*', [['/ceirsetting','Pengaturan CEIR grup'],['/ceirmode free','Gratis'],['/ceirmode seller','Dibayar seller'],['/ceirmode owner','Ditanggung owner'],['/ceirfee 2500','Ubah tarif'],['/ceirlist','Daftar grup'],['/payment ceir','Invoice CEIR']]);
    if(isOwner)section(lines,'👑 *OWNER • PEMBAYARAN*',[['/metode','Lihat metode aktif'],['/metode pay','Bayar otomatis dari saldo'],['/metode after','Tempo • tagihan invoice'],['/saldo add 100000','Tambah saldo grup'],['/saldo kurang 50000','Kurangi saldo grup'],['/payment all confirm','Tandai invoice lunas']]);
    section(lines,'ℹ️ *INFORMASI*',[['/grupinfo','Status dan harga layanan grup'],['/menu','Refresh dashboard']]);
   } }else{
