@@ -33,6 +33,24 @@ Bot mendukung login **Pairing Code atau QR Code**, database JSON lokal, Gemini A
 
 ---
 
+## CEIR Billing per Grup (V2)
+
+Pengaturan biaya CEIR dibuat terpisah dari biaya registrasi IMEI. Untuk order WhatsApp dan DHRU, status CEIR **REGISTERED** atau **ROAMER** menolak registrasi dan dapat menimbulkan biaya CEIR sesuai konfigurasi grup. Status **UNKNOWN** melanjutkan proses biasa. Error/timeout tidak dikenai biaya penolakan ini.
+
+| Mode | Perilaku |
+| --- | --- |
+| FREE | Tidak ada biaya CEIR untuk seller maupun owner |
+| SELLER | Biaya CEIR dibebankan ke grup; prepaid mengurangi saldo, postpaid dicatat di ledger |
+| OWNER | Biaya dicatat sebagai pengeluaran owner, tanpa mengurangi saldo seller |
+
+Tarif awal yang disarankan adalah **Rp2.500 per IMEI**, tetapi mode default untuk grup lama adalah **FREE** agar tidak ada pemotongan mendadak. Setiap order menyimpan `ceirBilling` agar pengecekan berulang tidak mendebit ulang. Pemotongan prepaid membutuhkan saldo tersedia yang cukup; bila tidak cukup, order ditolak dan biaya belum ditagih. Mode OWNER adalah pembukuan pengeluaran, bukan transfer atau pemotongan saldo provider.
+
+**Catatan implementasi:** fungsi `ceirConfig` dan `chargeCeir` berada di `lib/imeiCenter/store.js`, dan dipanggil dari `lib/imeiCenter/core.js`. Pengaturan per grup tersimpan di `settings.sellerGroups[GROUP_JID].ceirBilling` dengan `mode` dan `fee`. Perintah WhatsApp khusus owner `/ceirsetting`, `/ceirmode`, `/ceirfee`, dan `/ceirlist` masih perlu diaktifkan dan diuji sebelum digunakan. Jangan menganggap menu tersebut sudah tersedia hanya karena aturan billing sudah disimpan di kode.
+
+**Perhatian:** ledger CEIR postpaid perlu dimasukkan ke laporan/invoice sebelum ditagihkan; cek saldo dan status order melalui pengujian staging sebelum produksi.
+
+---
+
 # 📱 IMEI CENTER — 3B / 1B / 3BS / 3BD (V2)
 
 Empat perintah berbagi mesin order, tetapi harga dan grup operator **terpisah untuk setiap layanan**. IMEI yang masih diproses di salah satu layanan ditolak di layanan lainnya. Setiap order terlebih dahulu diperiksa lewat REST API CeirGo: `POST /api/order` dengan `code=cek_imei`, lalu `GET /api/order/{id}` bila pending. Hanya hasil IMEI **UNKNOWN** yang diteruskan; ROAMER, REGISTERED, error, atau hasil ambigu ditolak. Pengecekan API dapat mengurangi saldo CeirGo meskipun order 3B ditolak.
