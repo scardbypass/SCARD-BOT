@@ -47,7 +47,6 @@ module.exports={commands:['menu','help'],registered:false,async run({reply,isOwn
     ['/'+activeServices[0]+' invoice','Lihat tagihan grup']
    ]);
    section(lines,'💰 *KEUANGAN GRUP*',[['/saldo','Cek saldo grup'],['/mutasi','Riwayat transaksi'],['/invoice','Cek invoice']]);
-   if(isOwner)section(lines,'🔍 *OWNER • CEIR BILLING*', [['/ceirsetting','Pengaturan CEIR grup'],['/ceirmode free','Gratis'],['/ceirmode seller','Dibayar seller'],['/ceirmode owner','Ditanggung owner'],['/ceirfee 2500','Ubah tarif'],['/ceirlist','Daftar grup'],['/payment ceir','Invoice CEIR']]);
    if(isOwner)section(lines,'👑 *OWNER • PEMBAYARAN*',[['/metode','Lihat metode aktif'],['/metode pay','Bayar otomatis dari saldo'],['/metode after','Tempo • tagihan invoice'],['/saldo add 100000','Tambah saldo grup'],['/saldo kurang 50000','Kurangi saldo grup'],['/payment all confirm','Tandai invoice lunas']]);
    section(lines,'ℹ️ *INFORMASI*',[['/grupinfo','Status dan harga layanan grup'],['/menu','Refresh dashboard']]);
   } }else{
@@ -56,6 +55,7 @@ module.exports={commands:['menu','help'],registered:false,async run({reply,isOwn
   section(lines,'🌐 *UTILITAS*',[['/whois','Informasi domain'],['/statusweb','Status website']]);
   if(isOwner){
    section(lines,'👑 *OWNER • SELLER*',[['/grupset ID_GRUP 3b 90000','Aktifkan layanan grup jarak jauh'],['/grupoff ID_GRUP 3b','Nonaktifkan layanan grup'],['/grupinfo ID_GRUP','Informasi grup tertentu'],['/3b add','Daftarkan grup seller'],['/3b del','Hapus grup seller'],['/3b on / off','Aktif/nonaktif layanan'],['/3b harga 20000','Harga seller'],['/3b harga global 25000','Harga global'],['/3b bank BCA 123 NAMA','Rekening invoice'],['/payment all','Konfirmasi pembayaran'],['/jam','Jam operasional']]);
+   section(lines,'🔍 *OWNER • CEIR BILLING*',[['/ceirlist','Semua grup & tarif CEIR'],['/ceirsetting ID_GRUP','Lihat konfigurasi'],['/ceirmode ID_GRUP free','Gratis'],['/ceirmode ID_GRUP seller','Biaya seller'],['/ceirmode ID_GRUP owner','Biaya owner'],['/ceirfee ID_GRUP 2500','Atur tarif']]);
    section(lines,'⚙️ *OWNER • OPERATOR*',[['/3b operator set','Operator 3B'],['/1b operator set','Operator 1B'],['/3bs operator set','Operator 3BS'],['/3bd operator set','Operator 3BD']]);
    section(lines,'🔐 *OWNER • API*',[['/api on / off','API seller'],['/api global on / off','API seluruh seller'],['/api reset confirm','Rotasi API key (di grup seller)']]);
    section(lines,'🛠️ *OWNER • SISTEM*',[['/monitor','Monitor website'],['/saldoceir','Saldo provider'],['/provider','Pengaturan provider'],['/airbot 100000','Deposit AirBot'],['/depoapi','Konfirmasi topup'],['/aion / aioff','Gemini AI'],['/vps','Status VPS'],['/logs','Log PM2'],['/cekupdate','Cek dependency'],['/updatebot','Update bot'],['/backup','Backup data'],['/clear','Bersihkan file'],['/promosi','Promosi'],['/importwa','Export subscriber'],['/getid','ID grup'],['/nomergrup','Export nomor grup']]);
