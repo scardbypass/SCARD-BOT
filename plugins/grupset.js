@@ -1,5 +1,5 @@
 const {state,save,allowed,price,operational}=require('../lib/imeiCenter/store');
-const SERVICES=['3b','1b','3bs','3bd'];
+const SERVICES=['3b','1b','1bd','3bs','3bd'];
 const valid=id=>/^\d{10,30}@g\.us$/.test(String(id||''));
 const money=n=>'Rp'+Number(n||0).toLocaleString('id-ID');
 function info(id){
@@ -10,7 +10,7 @@ function info(id){
   const active=allowed(s,id)&&price(s,id)>0&&operational(s);
   lines.push('│ '+(active?'🟢':'🔴')+' '+s.toUpperCase()+' • '+money(price(s,id))+' • '+(active?'BUKA':'TUTUP'));
  }
- lines.push('│ Ketik /3b atau /1b untuk cara order.','╰── CUAN-BOT');
+ lines.push('│ Ketik /3b, /1b atau /1bd untuk cara order.','╰── CUAN-BOT');
  return lines.join('\n');
 }
 module.exports={commands:['grupinfo','grupset','grupoff'],registered:false,async run({sock,msg,reply,command,args,isOwner}){
