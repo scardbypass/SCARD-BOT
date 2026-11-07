@@ -1,11 +1,12 @@
-const {state,save,allowed,price,operational}=require('../lib/imeiCenter/store');
+const {state,save,allowed,invoiceLocked,price,operational}=require('../lib/imeiCenter/store');
 const SERVICES=['3b','1b','1bd','3bs','3bd'];
 const valid=id=>/^\d{10,30}@g\.us$/.test(String(id||''));
 const money=n=>'Rp'+Number(n||0).toLocaleString('id-ID');
 function info(id){
  const seller=state.settings.sellerGroups[id];
  if(!seller)return '🔒 Grup belum terdaftar sebagai seller.';
- const lines=['╭──〔 CUAN-BOT • INFORMASI GRUP 〕','│ Status: '+(seller.enabled!==false&&state.settings.enabled!==false?'🟢 AKTIF':'🔴 NONAKTIF'),'├── LAYANAN'];
+ const locked=invoiceLocked(id);
+ const lines=['╭──〔 CUAN-BOT • INFORMASI GRUP 〕','│ Status: '+(locked?'🔒 TERKUNCI (INVOICE)':seller.enabled!==false&&state.settings.enabled!==false?'🟢 AKTIF':'🔴 NONAKTIF'),'├── LAYANAN'];
  for(const s of SERVICES){
   const active=allowed(s,id)&&price(s,id)>0&&operational(s);
   lines.push('│ '+(active?'🟢':'🔴')+' '+s.toUpperCase()+' • '+money(price(s,id))+' • '+(active?'BUKA':'TUTUP'));
