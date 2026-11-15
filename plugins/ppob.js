@@ -42,7 +42,7 @@ function categories(items) {
   return [...new Set(items.map(x => x.category))].sort((a, b) => a.localeCompare(b, 'id'))
 }
 module.exports = {
-  commands: ['ppob', 'saldoppob'],
+  commands: ['ppob', 'pulsa', 'saldoppob'],
   ownerOnly: true,
   registered: false,
   menu: 'ppob',
@@ -53,6 +53,16 @@ module.exports = {
     }
     const items = await products()
     const cats = categories(items)
+    if (command === 'pulsa') {
+      const pulsa = items.filter(x => /pulsa|top.?up/i.test(x.category) && !/data|internet|paket|pln|game|wallet/i.test(x.category + ' ' + x.name))
+      if (!pulsa.length) return reply('Produk pulsa belum ditemukan di katalog OkeConnect.')
+      const page = Math.max(1, Number(args[0]) || 1)
+      const pages = Math.ceil(pulsa.length / PAGE_SIZE)
+      if (page > pages) return reply('Halaman tidak ditemukan. Ketik /pulsa')
+      const slice = pulsa.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+      const lines = slice.flatMap(x => [x.code + ' • ' + money(x.price), x.name, ''])
+      return reply(['✦ *SCARD • PULSA*', '━━━━━━━━━━━━━━━━', ...lines, 'Halaman ' + page + '/' + pages, 'Reply list: KODE NOMOR_TUJUAN', 'Contoh: ' + slice[0].code + ' 081234567890', ...(page < pages ? ['Lanjut: /pulsa ' + (page + 1)] : [])].join('\n'))
+    }
     if (!args.length) {
       const lines = cats.map((x, i) => String(i + 1).padStart(2, '0') + '  ' + x)
       return reply(['✦ *SCARD • PPOB CENTER*', '━━━━━━━━━━━━━━━━', ...lines, '', 'Pilih: /ppob 01', 'Saldo: /saldoppob'].join('\n'))
