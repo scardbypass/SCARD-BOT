@@ -28,7 +28,7 @@ function normalize(row) {
   const rawPrice = row.harga ?? row.price ?? row.selling_price ?? row.harga_jual
   const price = Number(String(rawPrice ?? '').replace(/[^\d]/g, ''))
   if (!code || !name || !Number.isFinite(price) || price <= 0) return null
-  return { code, name, price, category: String(row.kategori ?? row.category ?? row.jenis ?? row.type ?? 'Lainnya').trim(), status: String(row.status ?? row.seller_product_status ?? 'active') }
+  return { code, name, price, description: String(row.deskripsi ?? row.description ?? row.keterangan ?? row.detail ?? row.desc ?? '').trim(), category: String(row.kategori ?? row.category ?? row.jenis ?? row.type ?? 'Lainnya').trim(), status: String(row.status ?? row.seller_product_status ?? 'active') }
 }
 async function products(force = false) {
   if (!force && Date.now() - cache.at < 60000 && cache.products.length) return cache.products
@@ -112,40 +112,48 @@ function walletProducts(items, label) {
   return items.filter(x => groupOf(x) === 'ewallet' && walletOf(x) === label)
 }
 function displayList(title, items, page = 1, command = '') {
- if (!items.length) return 'Belum ada produk di katalog untuk pilihan ini.'
- const sorted=[...items].sort((a,b)=>a.price-b.price||a.code.localeCompare(b.code))
- const isPulse=['Telkomsel','Indosat','Smartfren','AXIS','Tri','XL','by.U','Operator Lain'].includes(title)
- const isPln=title==='TOKEN PLN'
- const pageSize=10, totalPages=Math.ceil(sorted.length/pageSize)
+ if(!items.length) return 'Belum ada produk di katalog untuk pilihan ini.'
+ const visible=items.filter(x=>!(/^(?:CEK|LIST|BYR|REV|PKTCEK|PKTLIST|PKTBYR)/i.test(x.code)&&x.price<=1000))
+ const sorted=[...visible].sort((a,b)=>a.price-b.price||a.code.localeCompare(b.code))
+ if(!sorted.length) return 'Belum ada produk transaksi pada kategori ini.'
+ const pageSize=8, totalPages=Math.ceil(sorted.length/pageSize)
  if(!Number.isInteger(page)||page<1||page>totalPages) return '❌ Halaman tidak tersedia. Pilih 1 sampai '+totalPages
  const selected=sorted.slice((page-1)*pageSize,page*pageSize)
- const detail=x=>{
+ const detail=(x,i)=>{
    const name=x.name.replace(/\s+/g,' ').trim()
-   const quota=name.match(/\b\d+(?:[.,]\d+)?\s*(?:GB|MB|TB)\b/i)?.[0]||''
-   const validity=name.match(/\b\d+\s*(?:hari|hr|day|days)\b/i)?.[0]||''
-   const lines=[x.code+'  •  '+money(x.price),'   '+name]
-   if(quota||validity) lines.push('   '+[quota?'📦 '+quota.toUpperCase():'',validity?'◷ '+validity:''].filter(Boolean).join('  |  '))
+   const description=x.description.replace(/\s+/g,' ').trim()
+   const source=name+' '+description
+   const quota=source.match(/\b\d+(?:[.,]\d+)?\s*(?:GB|MB|TB)\b/i)?.[0]||''
+   const validity=source.match(/\b\d+\s*(?:hari|hr|day|days)\b/i)?.[0]||''
+   const dataProduct=/data|kuota|internet|paket|happy|aon/i.test(source)
+   const lines=[
+     '*'+String((page-1)*pageSize+i+1).padStart(2,'0')+'  '+name+'*',
+     '🏷️ '+x.code+'  •  *'+money(x.price)+'*'
+   ]
+   if(dataProduct && quota) lines.push('📦 Kuota: *'+quota.toUpperCase()+'*')
+   if(dataProduct && !quota) lines.push('📦 Kuota: _tidak tercantum di katalog_')
+   if(validity) lines.push('◷ Aktif: '+validity)
+   if(description && description.toLowerCase()!==name.toLowerCase()) lines.push('ℹ️ '+description.slice(0,180))
    return lines.join('\n')
  }
- const next=command&&page<totalPages?'➡️ Berikutnya: '+command+' '+(page+1):''
- const prev=command&&page>1?'⬅️ Sebelumnya: '+command+' '+(page-1):''
+ const next=command&&page<totalPages?'➡️ '+command+' '+(page+1):''
+ const prev=command&&page>1?'⬅️ '+command+' '+(page-1):''
  return [
-   '✦ *SCARD • '+title.toUpperCase()+'*',
-   isPulse?'📱 *PULSA & PAKET OPERATOR*':isPln?'⚡ *TOKEN LISTRIK*':'📦 *KATALOG PRODUK*',
+   '✦ *SCARD DIGITAL*',
+   '📡 *'+title.toUpperCase()+'*',
    '━━━━━━━━━━━━━━━━━━━━',
    '',
-   ...selected.map(detail),
+   ...selected.flatMap((x,i)=>[detail(x,i),...(i<selected.length-1?['','──────────────','']:[])]),
    '',
    '━━━━━━━━━━━━━━━━━━━━',
-   '📊 *HALAMAN '+String(page).padStart(2,'0')+' / '+String(totalPages).padStart(2,'0')+'*',
-   '*'+sorted.length+' Produk Tersedia*',
+   '📄 *'+String(page).padStart(2,'0')+' / '+String(totalPages).padStart(2,'0')+'*  •  '+sorted.length+' produk',
    ...(prev?[prev]:[]),
    ...(next?[next]:[]),
    '',
    '↩ *ORDER VIA REPLY*',
    selected[0].code+' 081234567890',
    '',
-   '_SCARD DIGITAL • OKECONNECT_'
+   '_SCARD • OKECONNECT_'
  ].join('\n')
 }
 function chooseGroup(items, group, args, commandText) {
