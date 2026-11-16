@@ -56,7 +56,7 @@ function groupOf(item) {
   // Prefer product identity. Provider categories can contain unrelated items.
   if (/flazz|brizzi|brizzi|tapcash|e.?toll|saldo tol|mandiri toll|mandiri tol/.test(name + ' ' + code)) return 'lainnya'
   if (/token pln|pln prabayar|token listrik|h2h pln|h2h token pln/.test(name) || /^(?:cpln|pln(?:z|p|b|f)?\d)/.test(code)) return 'pln'
-  if (/dana|gopay|ovo|shopeepay|linkaja|isaku/.test(name)) return 'ewallet'
+  if (/dana|gopay|ovo|shopee\s?pay|shopee\s?pay|spay|link\s?aja|isaku/.test(name + ' ' + code)) return 'ewallet'
   if (/game|voucher game|mobile legends|free fire|pubg|valorant|steam|roblox/.test(name)) return 'game'
   if (/kuota|paket data|internet/.test(cat) || /kuota|paket data|internet/.test(name)) return 'data'
   if (/pulsa/.test(cat) && !/transfer/.test(cat)) return 'pulsa'
@@ -77,10 +77,29 @@ function operatorOf(item) {
 }
 function walletOf(item) {
   const s = (item.name + ' ' + item.code).toLowerCase()
-  for (const label of ['DANA', 'OVO', 'GoPay', 'ShopeePay', 'LinkAja', 'iSaku']) {
-    if (s.includes(label.toLowerCase())) return label
-  }
+  const patterns = [
+    ['DANA', /\\bdana\\b/],
+    ['OVO', /\\bovo\\b/],
+    ['GoPay', /gopay|go.pay/],
+    ['ShopeePay', /shopee\\s?pay|shopee.pay|\\bspay\\b/],
+    ['LinkAja', /link\\s?aja/],
+    ['iSaku', /isaku/]
+  ]
+  for (const [label, re] of patterns) if (re.test(s)) return label
   return 'Lainnya'
+}
+const WALLET_SHORTCUTS = {
+  dana: 'DANA',
+  ovo: 'OVO',
+  gopay: 'GoPay',
+  shopee: 'ShopeePay',
+  shopeepay: 'ShopeePay',
+  spay: 'ShopeePay',
+  linkaja: 'LinkAja',
+  isaku: 'iSaku'
+}
+function walletProducts(items, label) {
+  return items.filter(x => groupOf(x) === 'ewallet' && walletOf(x) === label)
 }
 function displayList(title, items) {
   if (!items.length) return 'Belum ada produk di katalog untuk pilihan ini.'
@@ -137,7 +156,7 @@ function chooseGroup(items, group, args, commandText) {
   return displayList(group === 'pln' ? 'TOKEN PLN' : group === 'game' ? 'VOUCHER GAME' : 'LAINNYA', matched)
 }
 module.exports = {
-  commands: ['ppob', 'pulsa', 'pln', 'ewallet', 'data', 'game', 'saldoppob', ...Array.from({length: 99}, (_, i) => 'pulsa' + (i + 1)), ...Array.from({length: 99}, (_, i) => 'pulsa' + String(i + 1).padStart(2, '0'))],
+  commands: ['ppob', 'pulsa', 'pln', 'ewallet', 'data', 'game', 'saldoppob', ...Object.keys(WALLET_SHORTCUTS), ...Array.from({length: 99}, (_, i) => 'pulsa' + (i + 1)), ...Array.from({length: 99}, (_, i) => 'pulsa' + String(i + 1).padStart(2, '0'))],
   ownerOnly: true,
   registered: false,
   menu: 'ppob',
@@ -147,6 +166,10 @@ module.exports = {
       return reply('✦ *SCARD • SALDO PPOB*\n━━━━━━━━━━━━━━━━\n' + (result == null ? 'Saldo belum tersedia' : money(result.balance ?? result)))
     }
     const items = await products()
+    if (Object.hasOwn(WALLET_SHORTCUTS, command)) {
+      const label = WALLET_SHORTCUTS[command]
+      return reply(displayList(label, walletProducts(items, label)))
+    }
     if (/^pulsa\d+$/.test(command)) return reply(chooseGroup(items, 'pulsa', [String(Number(command.slice(5)))], '/pulsa'))
     if (command !== 'ppob') return reply(chooseGroup(items, command, args, '/' + command))
     if (!args.length) {
