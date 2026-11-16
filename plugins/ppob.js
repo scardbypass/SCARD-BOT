@@ -88,6 +88,16 @@ function walletOf(item) {
   for (const [label, re] of patterns) if (re.test(s)) return label
   return 'Lainnya'
 }
+const PULSA_SHORTCUTS = {
+  tri: 'Tri', three: 'Tri',
+  xl: 'XL', telkomsel: 'Telkomsel', tsel: 'Telkomsel',
+  indosat: 'Indosat', im3: 'Indosat',
+  axis: 'AXIS', smartfren: 'Smartfren',
+  byu: 'by.U'
+}
+function pulsaProducts(items, label) {
+  return items.filter(x => groupOf(x) === 'pulsa' && operatorOf(x) === label)
+}
 const WALLET_SHORTCUTS = {
   dana: 'DANA',
   ovo: 'OVO',
@@ -156,7 +166,7 @@ function chooseGroup(items, group, args, commandText) {
   return displayList(group === 'pln' ? 'TOKEN PLN' : group === 'game' ? 'VOUCHER GAME' : 'LAINNYA', matched)
 }
 module.exports = {
-  commands: ['ppob', 'pulsa', 'pln', 'ewallet', 'data', 'game', 'saldoppob', ...Object.keys(WALLET_SHORTCUTS), ...Array.from({length: 99}, (_, i) => 'pulsa' + (i + 1)), ...Array.from({length: 99}, (_, i) => 'pulsa' + String(i + 1).padStart(2, '0'))],
+  commands: ['ppob', 'pulsa', 'pln', 'ewallet', 'data', 'game', 'saldoppob', ...Object.keys(WALLET_SHORTCUTS), ...Object.keys(PULSA_SHORTCUTS), ...Array.from({length: 99}, (_, i) => 'pulsa' + (i + 1)), ...Array.from({length: 99}, (_, i) => 'pulsa' + String(i + 1).padStart(2, '0'))],
   ownerOnly: true,
   registered: false,
   menu: 'ppob',
@@ -166,6 +176,10 @@ module.exports = {
       return reply('✦ *SCARD • SALDO PPOB*\n━━━━━━━━━━━━━━━━\n' + (result == null ? 'Saldo belum tersedia' : money(result.balance ?? result)))
     }
     const items = await products()
+    if (Object.hasOwn(PULSA_SHORTCUTS, command)) {
+      const label = PULSA_SHORTCUTS[command]
+      return reply(displayList(label, pulsaProducts(items, label)))
+    }
     if (Object.hasOwn(WALLET_SHORTCUTS, command)) {
       const label = WALLET_SHORTCUTS[command]
       return reply(displayList(label, walletProducts(items, label)))
