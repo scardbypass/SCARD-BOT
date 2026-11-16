@@ -112,11 +112,7 @@ function walletProducts(items, label) {
   return items.filter(x => groupOf(x) === 'ewallet' && walletOf(x) === label)
 }
 async function sendCatalog(reply, output) {
- if(!Array.isArray(output)) return reply(output)
- for(let i=0;i<output.length;i++) {
-   await reply(output[i])
-   if(i<output.length-1) await new Promise(resolve=>setTimeout(resolve,350))
- }
+ return reply(output)
 }
 function displayList(title, items) {
  if(!items.length) return 'Belum ada produk di katalog untuk pilihan ini.'
@@ -129,33 +125,18 @@ function displayList(title, items) {
    const validity=source.match(/\b\d+\s*(?:hari|hr|day|days)\b/i)?.[0]||''
    const dataProduct=/data|kuota|internet|paket|happy|aon/i.test(source)
    const lines=['*'+name+'*',x.code+'  •  '+money(x.price)]
-   if(dataProduct) lines.push('📦 Kuota: '+(quota?'*'+quota.toUpperCase()+'*':'_Tidak tercantum_'))
-   if(validity) lines.push('◷ Aktif: '+validity)
-   if(description&&description.toLowerCase()!==name.toLowerCase()) lines.push('ℹ️ '+description.slice(0,180))
+   const specs=[]
+   if(dataProduct && quota) specs.push('📦 '+quota.toUpperCase())
+   if(validity) specs.push('◷ '+validity)
+   if(specs.length) lines.push(specs.join('  |  '))
+   if(description&&description.toLowerCase()!==name.toLowerCase()) lines.push('ℹ️ '+description.slice(0,95))
    return lines.join('\n')
  }
- const chunks=[]
- let body=''
- const maxLength=3000
- for(const item of sorted) {
-   const entry=detail(item)
-   if(body && body.length+entry.length+5>maxLength) {chunks.push(body);body=''}
-   body+=(body?'\n\n──────────────\n\n':'')+entry
- }
- if(body) chunks.push(body)
- return chunks.map((part,i)=>[
-   '✦ *SCARD DIGITAL*',
-   '📡 *'+title.toUpperCase()+'*',
-   '━━━━━━━━━━━━━━━━━━━━',
-   '*Bagian '+(i+1)+'/'+chunks.length+' • Total '+sorted.length+' produk*',
-   '',
-   part,
-   '',
-   '━━━━━━━━━━━━━━━━━━━━',
-   '↩ *ORDER VIA REPLY*',
-   'Balas pesan ini: KODE 081234567890',
-   '_SCARD • OKECONNECT_'
- ].join('\n'))
+ const header=['✦ *SCARD DIGITAL*','📡 *'+title.toUpperCase()+'*','━━━━━━━━━━━━━━━━━━━━','*'+sorted.length+' PRODUK TERSEDIA*',''].join('\n')
+ const footer=['','━━━━━━━━━━━━━━━━━━━━','↩ *ORDER VIA REPLY*','Balas pesan ini: KODE 081234567890','_SCARD • OKECONNECT_'].join('\n')
+ const message=header+sorted.map(detail).join('\n\n')+footer
+ if(message.length>60000) return '⚠️ Katalog '+title+' berisi '+sorted.length+' produk dan terlalu panjang untuk satu pesan WhatsApp ('+message.length+' karakter). Tidak ada produk yang dipotong. Gunakan kategori lebih spesifik atau minta format katalog yang lebih ringkas.'
+ return message
 }
 function chooseGroup(items, group, args, commandText) {
   const matched = items.filter(x => groupOf(x) === group)
