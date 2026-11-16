@@ -111,50 +111,51 @@ const WALLET_SHORTCUTS = {
 function walletProducts(items, label) {
   return items.filter(x => groupOf(x) === 'ewallet' && walletOf(x) === label)
 }
-function displayList(title, items, page = 1, command = '') {
+async function sendCatalog(reply, output) {
+ if(!Array.isArray(output)) return reply(output)
+ for(let i=0;i<output.length;i++) {
+   await reply(output[i])
+   if(i<output.length-1) await new Promise(resolve=>setTimeout(resolve,350))
+ }
+}
+function displayList(title, items) {
  if(!items.length) return 'Belum ada produk di katalog untuk pilihan ini.'
- const visible=items.filter(x=>!(/^(?:CEK|LIST|BYR|REV|PKTCEK|PKTLIST|PKTBYR)/i.test(x.code)&&x.price<=1000))
- const sorted=[...visible].sort((a,b)=>a.price-b.price||a.code.localeCompare(b.code))
- if(!sorted.length) return 'Belum ada produk transaksi pada kategori ini.'
- const pageSize=8, totalPages=Math.ceil(sorted.length/pageSize)
- if(!Number.isInteger(page)||page<1||page>totalPages) return '❌ Halaman tidak tersedia. Pilih 1 sampai '+totalPages
- const selected=sorted.slice((page-1)*pageSize,page*pageSize)
- const detail=(x,i)=>{
+ const sorted=[...items].sort((a,b)=>a.price-b.price||a.code.localeCompare(b.code))
+ const detail=x=>{
    const name=x.name.replace(/\s+/g,' ').trim()
-   const description=x.description.replace(/\s+/g,' ').trim()
+   const description=String(x.description||'').replace(/\s+/g,' ').trim()
    const source=name+' '+description
    const quota=source.match(/\b\d+(?:[.,]\d+)?\s*(?:GB|MB|TB)\b/i)?.[0]||''
    const validity=source.match(/\b\d+\s*(?:hari|hr|day|days)\b/i)?.[0]||''
    const dataProduct=/data|kuota|internet|paket|happy|aon/i.test(source)
-   const lines=[
-     '*'+String((page-1)*pageSize+i+1).padStart(2,'0')+'  '+name+'*',
-     '🏷️ '+x.code+'  •  *'+money(x.price)+'*'
-   ]
-   if(dataProduct && quota) lines.push('📦 Kuota: *'+quota.toUpperCase()+'*')
-   if(dataProduct && !quota) lines.push('📦 Kuota: _tidak tercantum di katalog_')
+   const lines=['*'+name+'*',x.code+'  •  '+money(x.price)]
+   if(dataProduct) lines.push('📦 Kuota: '+(quota?'*'+quota.toUpperCase()+'*':'_Tidak tercantum_'))
    if(validity) lines.push('◷ Aktif: '+validity)
-   if(description && description.toLowerCase()!==name.toLowerCase()) lines.push('ℹ️ '+description.slice(0,180))
+   if(description&&description.toLowerCase()!==name.toLowerCase()) lines.push('ℹ️ '+description.slice(0,180))
    return lines.join('\n')
  }
- const next=command&&page<totalPages?'➡️ '+command+' '+(page+1):''
- const prev=command&&page>1?'⬅️ '+command+' '+(page-1):''
- return [
+ const chunks=[]
+ let body=''
+ const maxLength=3000
+ for(const item of sorted) {
+   const entry=detail(item)
+   if(body && body.length+entry.length+5>maxLength) {chunks.push(body);body=''}
+   body+=(body?'\n\n──────────────\n\n':'')+entry
+ }
+ if(body) chunks.push(body)
+ return chunks.map((part,i)=>[
    '✦ *SCARD DIGITAL*',
    '📡 *'+title.toUpperCase()+'*',
    '━━━━━━━━━━━━━━━━━━━━',
+   '*Bagian '+(i+1)+'/'+chunks.length+' • Total '+sorted.length+' produk*',
    '',
-   ...selected.flatMap((x,i)=>[detail(x,i),...(i<selected.length-1?['','──────────────','']:[])]),
+   part,
    '',
    '━━━━━━━━━━━━━━━━━━━━',
-   '📄 *'+String(page).padStart(2,'0')+' / '+String(totalPages).padStart(2,'0')+'*  •  '+sorted.length+' produk',
-   ...(prev?[prev]:[]),
-   ...(next?[next]:[]),
-   '',
    '↩ *ORDER VIA REPLY*',
-   selected[0].code+' 081234567890',
-   '',
+   'Balas pesan ini: KODE 081234567890',
    '_SCARD • OKECONNECT_'
- ].join('\n')
+ ].join('\n'))
 }
 function chooseGroup(items, group, args, commandText) {
   const matched = items.filter(x => groupOf(x) === group)
@@ -192,14 +193,14 @@ module.exports = {
     const items = await products()
     if (Object.hasOwn(PULSA_SHORTCUTS, command)) {
       const label = PULSA_SHORTCUTS[command]
-      return reply(displayList(label, pulsaProducts(items, label), args[0]===undefined?1:Number(args[0]), '/'+command))
+      return sendCatalog(reply, displayList(label, pulsaProducts(items, label), args[0]===undefined?1:Number(args[0]), '/'+command))
     }
     if (Object.hasOwn(WALLET_SHORTCUTS, command)) {
       const label = WALLET_SHORTCUTS[command]
-      return reply(displayList(label, walletProducts(items, label), args[0]===undefined?1:Number(args[0]), '/'+command))
+      return sendCatalog(reply, displayList(label, walletProducts(items, label), args[0]===undefined?1:Number(args[0]), '/'+command))
     }
-    if (/^pulsa\d+$/.test(command)) return reply(chooseGroup(items, 'pulsa', [String(Number(command.slice(5)))], '/pulsa'))
-    if (command !== 'ppob') return reply(chooseGroup(items, command, args, '/' + command))
+    if (/^pulsa\d+$/.test(command)) return sendCatalog(reply, chooseGroup(items, 'pulsa', [String(Number(command.slice(5)))], '/pulsa'))
+    if (command !== 'ppob') return sendCatalog(reply, chooseGroup(items, command, args, '/' + command))
     if (!args.length) {
       let balanceText = 'Tidak tersedia'
       try {
@@ -235,8 +236,8 @@ module.exports = {
       const n = Number(args[1])
       const category = Number.isInteger(n) && n > 0 ? cats[n - 1] : cats.find(x => x.toLowerCase() === String(args[1] || '').toLowerCase())
       if (!category) return reply('Kategori tidak ditemukan. Ketik /ppob lainnya')
-      return reply(displayList(category, other.filter(x => x.category === category), args[2]===undefined?1:Number(args[2]), '/ppob lainnya '+String(n)))
+      return sendCatalog(reply, displayList(category, other.filter(x => x.category === category), args[2]===undefined?1:Number(args[2]), '/ppob lainnya '+String(n)))
     }
-    return reply(chooseGroup(items, group, args.slice(1), '/' + group))
+    return sendCatalog(reply, chooseGroup(items, group, args.slice(1), '/' + group))
   }
 }
