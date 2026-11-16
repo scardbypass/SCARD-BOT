@@ -78,11 +78,11 @@ function operatorOf(item) {
 function walletOf(item) {
   const s = (item.name + ' ' + item.code).toLowerCase()
   const patterns = [
-    ['DANA', /\\bdana\\b/],
-    ['OVO', /\\bovo\\b/],
+    ['DANA', /\bdana\b/],
+    ['OVO', /\bovo\b/],
     ['GoPay', /gopay|go.pay/],
-    ['ShopeePay', /shopee\\s?pay|shopee.pay|\\bspay\\b/],
-    ['LinkAja', /link\\s?aja/],
+    ['ShopeePay', /shopee\s?pay|shopee.pay|\bspay\b/],
+    ['LinkAja', /link\s?aja/],
     ['iSaku', /isaku/]
   ]
   for (const [label, re] of patterns) if (re.test(s)) return label
