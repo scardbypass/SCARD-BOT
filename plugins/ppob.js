@@ -41,8 +41,81 @@ async function products(force = false) {
 function categories(items) {
   return [...new Set(items.map(x => x.category))].sort((a, b) => a.localeCompare(b, 'id'))
 }
+const GROUPS = [
+  { label: 'Pulsa', command: 'pulsa' },
+  { label: 'Paket Internet', command: 'data' },
+  { label: 'Token PLN', command: 'pln' },
+  { label: 'E-Wallet', command: 'ewallet' },
+  { label: 'Voucher Game', command: 'game' },
+  { label: 'Layanan Lainnya', command: 'lainnya' }
+]
+function groupOf(item) {
+  const cat = item.category.toLowerCase()
+  const name = item.name.toLowerCase()
+  if (/token pln|pln prabayar|token listrik/.test(cat)) return 'pln'
+  if (/kuota|paket data|internet/.test(cat)) return 'data'
+  if (/pulsa/.test(cat) && !/transfer/.test(cat)) return 'pulsa'
+  if (/dompet digital|e.wallet|e-wallet/.test(cat)) return 'ewallet'
+  if (/game|voucher game/.test(cat + ' ' + name)) return 'game'
+  return 'lainnya'
+}
+function operatorOf(item) {
+  const s = (item.name + ' ' + item.category + ' ' + item.code).toLowerCase()
+  if (/telkomsel|simpati|as \b|tsel|t.sel/.test(s)) return 'Telkomsel'
+  if (/indosat|im3|mentari/.test(s)) return 'Indosat'
+  if (/smartfren/.test(s)) return 'Smartfren'
+  if (/axis/.test(s)) return 'AXIS'
+  if (/tri\b|three|3 indonesia/.test(s)) return 'Tri'
+  if (/xl\b|xl axiata/.test(s)) return 'XL'
+  if (/byu|by.u/.test(s)) return 'by.U'
+  return 'Operator Lain'
+}
+function walletOf(item) {
+  const s = (item.name + ' ' + item.code).toLowerCase()
+  for (const label of ['DANA', 'OVO', 'GoPay', 'ShopeePay', 'LinkAja', 'iSaku']) {
+    if (s.includes(label.toLowerCase())) return label
+  }
+  return 'Lainnya'
+}
+function displayList(title, items, page, commandText) {
+  const pages = Math.max(1, Math.ceil(items.length / PAGE_SIZE))
+  if (page > pages) return 'Halaman tidak ditemukan.'
+  const slice = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  if (!slice.length) return 'Belum ada produk di katalog untuk pilihan ini.'
+  const lines = slice.flatMap(x => [x.code + '  •  ' + money(x.price), x.name, ''])
+  return [
+    '✦ *SCARD • ' + title.toUpperCase() + '*',
+    '━━━━━━━━━━━━━━━━',
+    ...lines,
+    'Halaman ' + page + '/' + pages,
+    'Format order: KODE NOMOR_TUJUAN',
+    'Contoh: ' + slice[0].code + ' 081234567890',
+    ...(page < pages ? ['Lanjut: ' + commandText + ' ' + (page + 1)] : [])
+  ].join('\n')
+}
+function chooseGroup(items, group, args, commandText) {
+  const matched = items.filter(x => groupOf(x) === group)
+  if (!matched.length) return 'Produk belum tersedia pada katalog.'
+  if (group === 'pulsa' || group === 'data' || group === 'ewallet') {
+    const getLabel = group === 'ewallet' ? walletOf : operatorOf
+    const labels = [...new Set(matched.map(getLabel))].sort((a, b) => a.localeCompare(b, 'id'))
+    if (!args.length) return [
+      '✦ *SCARD • ' + (group === 'data' ? 'PAKET INTERNET' : group === 'ewallet' ? 'E-WALLET' : 'PULSA') + '*',
+      '━━━━━━━━━━━━━━━━',
+      ...labels.map((label, i) => String(i + 1).padStart(2, '0') + '  ' + label),
+      '',
+      'Pilih: ' + commandText + ' 01'
+    ].join('\n')
+    const index = Number(args[0])
+    const selected = Number.isInteger(index) && index > 0 ? labels[index - 1] : labels.find(x => x.toLowerCase() === String(args[0]).toLowerCase())
+    if (!selected) return 'Pilihan tidak ditemukan. Ketik ' + commandText
+    const subset = matched.filter(x => getLabel(x) === selected)
+    return displayList(selected, subset, Math.max(1, Number(args[1]) || 1), commandText + ' ' + args[0])
+  }
+  return displayList(group === 'pln' ? 'TOKEN PLN' : group === 'game' ? 'VOUCHER GAME' : 'LAINNYA', matched, Math.max(1, Number(args[0]) || 1), commandText)
+}
 module.exports = {
-  commands: ['ppob', 'pulsa', 'saldoppob'],
+  commands: ['ppob', 'pulsa', 'pln', 'ewallet', 'data', 'game', 'saldoppob'],
   ownerOnly: true,
   registered: false,
   menu: 'ppob',
@@ -52,30 +125,30 @@ module.exports = {
       return reply('✦ *SCARD • SALDO PPOB*\n━━━━━━━━━━━━━━━━\n' + (result == null ? 'Saldo belum tersedia' : money(result.balance ?? result)))
     }
     const items = await products()
-    const cats = categories(items)
-    if (command === 'pulsa') {
-      const pulsa = items.filter(x => /pulsa|top.?up/i.test(x.category) && !/data|internet|paket|pln|game|wallet/i.test(x.category + ' ' + x.name))
-      if (!pulsa.length) return reply('Produk pulsa belum ditemukan di katalog OkeConnect.')
-      const page = Math.max(1, Number(args[0]) || 1)
-      const pages = Math.ceil(pulsa.length / PAGE_SIZE)
-      if (page > pages) return reply('Halaman tidak ditemukan. Ketik /pulsa')
-      const slice = pulsa.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-      const lines = slice.flatMap(x => [x.code + ' • ' + money(x.price), x.name, ''])
-      return reply(['✦ *SCARD • PULSA*', '━━━━━━━━━━━━━━━━', ...lines, 'Halaman ' + page + '/' + pages, 'Reply list: KODE NOMOR_TUJUAN', 'Contoh: ' + slice[0].code + ' 081234567890', ...(page < pages ? ['Lanjut: /pulsa ' + (page + 1)] : [])].join('\n'))
-    }
-    if (!args.length) {
-      const lines = cats.map((x, i) => String(i + 1).padStart(2, '0') + '  ' + x)
-      return reply(['✦ *SCARD • PPOB CENTER*', '━━━━━━━━━━━━━━━━', ...lines, '', 'Pilih: /ppob 01', 'Saldo: /saldoppob'].join('\n'))
-    }
+    if (command !== 'ppob') return reply(chooseGroup(items, command, args, '/' + command))
+    if (!args.length) return reply([
+      '✦ *SCARD • DIGITAL CENTER*',
+      '━━━━━━━━━━━━━━━━',
+      ...GROUPS.map((g, i) => String(i + 1).padStart(2, '0') + '  ' + g.label),
+      '',
+      'Ketik /pulsa, /pln, /ewallet',
+      'atau pilih /ppob 01'
+    ].join('\n'))
     const index = Number(args[0])
-    const selected = Number.isInteger(index) && index > 0 ? cats[index - 1] : cats.find(x => x.toLowerCase() === args.join(' ').toLowerCase())
-    if (!selected) return reply('Kategori tidak ditemukan. Ketik /ppob')
-    const page = Math.max(1, Number(args[1]) || 1)
-    const filtered = items.filter(x => x.category === selected)
-    const pages = Math.ceil(filtered.length / PAGE_SIZE)
-    if (page > pages) return reply('Halaman tidak ditemukan.')
-    const slice = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-    const lines = slice.flatMap(x => [x.code + ' • ' + money(x.price), x.name, ''])
-    return reply(['✦ *SCARD • ' + selected.toUpperCase() + '*', '━━━━━━━━━━━━━━━━', ...lines, 'Halaman ' + page + '/' + pages, 'Reply list: KODE NOMOR_TUJUAN', 'Contoh: ' + (slice[0]?.code || 'KODE') + ' 081234567890', 'Halaman lain: /ppob ' + args[0] + ' ' + (page + 1)].join('\n'))
+    const group = Number.isInteger(index) && index > 0 ? GROUPS[index - 1]?.command : GROUPS.find(g => g.command === String(args[0]).toLowerCase())?.command
+    if (!group) return reply('Pilihan tidak ditemukan. Ketik /ppob')
+    if (group === 'lainnya' && args.length === 1) {
+      const cats = categories(items.filter(x => groupOf(x) === 'lainnya'))
+      return reply(['✦ *SCARD • LAINNYA*', '━━━━━━━━━━━━━━━━', ...cats.map((x, i) => String(i + 1).padStart(2, '0') + '  ' + x), '', 'Pilih: /ppob lainnya 01'].join('\n'))
+    }
+    if (group === 'lainnya') {
+      const other = items.filter(x => groupOf(x) === 'lainnya')
+      const cats = categories(other)
+      const n = Number(args[1])
+      const category = Number.isInteger(n) && n > 0 ? cats[n - 1] : cats.find(x => x.toLowerCase() === String(args[1] || '').toLowerCase())
+      if (!category) return reply('Kategori tidak ditemukan. Ketik /ppob lainnya')
+      return reply(displayList(category, other.filter(x => x.category === category), Math.max(1, Number(args[2]) || 1), '/ppob lainnya ' + args[1]))
+    }
+    return reply(chooseGroup(items, group, args.slice(1), '/' + group))
   }
 }
