@@ -123,7 +123,8 @@ module.exports = {
       return reply('✦ *SCARD • SALDO PPOB*\n━━━━━━━━━━━━━━━━\n' + (result == null ? 'Saldo belum tersedia' : money(result.balance ?? result)))
     }
     const items = await products()
-    if (/^pulsa\\d+$/.test(command)) return reply(chooseGroup(items, 'pulsa', [String(Number(command.slice(5)))], '/pulsa'))\n    if (command !== 'ppob') return reply(chooseGroup(items, command, args, '/' + command))
+    if (/^pulsa\\d+$/.test(command)) return reply(chooseGroup(items, 'pulsa', [String(Number(command.slice(5)))], '/pulsa'))
+    if (command !== 'ppob') return reply(chooseGroup(items, command, args, '/' + command))
     if (!args.length) return reply([
       '✦ *SCARD • DIGITAL CENTER*',
       '━━━━━━━━━━━━━━━━',
