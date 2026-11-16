@@ -80,15 +80,28 @@ function walletOf(item) {
 function displayList(title, items) {
   if (!items.length) return 'Belum ada produk di katalog untuk pilihan ini.'
   const sorted = [...items].sort((a, b) => a.price - b.price || a.code.localeCompare(b.code))
-  const lines = sorted.map(x => x.code + '  •  ' + money(x.price) + (x.name.toLowerCase() === title.toLowerCase() ? '' : '  —  ' + x.name))
+  const isPulse = ['Telkomsel', 'Indosat', 'Smartfren', 'AXIS', 'Tri', 'XL', 'by.U', 'Operator Lain'].includes(title)
+  const isActive = x => /masa\s*aktif|perpanjang\s*aktif/i.test(x.name)
+  const regular = isPulse ? sorted.filter(x => !isActive(x)) : sorted
+  const active = isPulse ? sorted.filter(isActive) : []
+  const format = x => x.code + '  •  ' + money(x.price) + (isPulse || x.name.toLowerCase() === title.toLowerCase() ? '' : '  —  ' + x.name)
+  const lines = isPulse
+    ? ['*PULSA REGULER*', ...regular.map(format), ...(active.length ? ['', '*MASA AKTIF*', ...active.map(format)] : [])]
+    : sorted.map(format)
   return [
     '✦ *SCARD • ' + title.toUpperCase() + '*',
+    isPulse ? 'Pulsa & Masa Aktif' : 'Daftar Produk',
     '━━━━━━━━━━━━━━━━',
+    '',
     ...lines,
+    '',
     '━━━━━━━━━━━━━━━━',
-    sorted.length + ' produk tersedia',
-    'Reply list: KODE NOMOR_TUJUAN',
-    'Contoh: ' + sorted[0].code + ' 081234567890'
+    '*' + sorted.length + ' Produk Tersedia*',
+    '',
+    '↩ *ORDER VIA REPLY*',
+    (regular[0] || active[0]).code + ' 081234567890',
+    '',
+    'SCARD DIGITAL • OKECONNECT'
   ].join('\n')
 }
 function chooseGroup(items, group, args, commandText) {
@@ -123,7 +136,7 @@ module.exports = {
       return reply('✦ *SCARD • SALDO PPOB*\n━━━━━━━━━━━━━━━━\n' + (result == null ? 'Saldo belum tersedia' : money(result.balance ?? result)))
     }
     const items = await products()
-    if (/^pulsa\\d+$/.test(command)) return reply(chooseGroup(items, 'pulsa', [String(Number(command.slice(5)))], '/pulsa'))
+    if (/^pulsa\d+$/.test(command)) return reply(chooseGroup(items, 'pulsa', [String(Number(command.slice(5)))], '/pulsa'))
     if (command !== 'ppob') return reply(chooseGroup(items, command, args, '/' + command))
     if (!args.length) return reply([
       '✦ *SCARD • DIGITAL CENTER*',
