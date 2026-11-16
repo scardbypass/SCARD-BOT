@@ -52,11 +52,16 @@ const GROUPS = [
 function groupOf(item) {
   const cat = item.category.toLowerCase()
   const name = item.name.toLowerCase()
-  if (/token pln|pln prabayar|token listrik/.test(cat)) return 'pln'
-  if (/kuota|paket data|internet/.test(cat)) return 'data'
+  const code = item.code.toLowerCase()
+  // Prefer product identity. Provider categories can contain unrelated items.
+  if (/flazz|brizzi|brizzi|tapcash|e.?toll|saldo tol|mandiri toll|mandiri tol/.test(name + ' ' + code)) return 'lainnya'
+  if (/token pln|pln prabayar|token listrik|h2h pln|h2h token pln/.test(name) || /^(?:cpln|pln(?:z|p|b|f)?\d)/.test(code)) return 'pln'
+  if (/dana|gopay|ovo|shopeepay|linkaja|isaku/.test(name)) return 'ewallet'
+  if (/game|voucher game|mobile legends|free fire|pubg|valorant|steam|roblox/.test(name)) return 'game'
+  if (/kuota|paket data|internet/.test(cat) || /kuota|paket data|internet/.test(name)) return 'data'
   if (/pulsa/.test(cat) && !/transfer/.test(cat)) return 'pulsa'
   if (/dompet digital|e.wallet|e-wallet/.test(cat)) return 'ewallet'
-  if (/game|voucher game/.test(cat + ' ' + name)) return 'game'
+  if (/game|voucher game/.test(cat)) return 'game'
   return 'lainnya'
 }
 function operatorOf(item) {
@@ -81,16 +86,22 @@ function displayList(title, items) {
   if (!items.length) return 'Belum ada produk di katalog untuk pilihan ini.'
   const sorted = [...items].sort((a, b) => a.price - b.price || a.code.localeCompare(b.code))
   const isPulse = ['Telkomsel', 'Indosat', 'Smartfren', 'AXIS', 'Tri', 'XL', 'by.U', 'Operator Lain'].includes(title)
+  const isPln = title === 'TOKEN PLN'
   const isActive = x => /masa\s*aktif|perpanjang\s*aktif/i.test(x.name)
-  const regular = isPulse ? sorted.filter(x => !isActive(x)) : sorted
-  const active = isPulse ? sorted.filter(isActive) : []
-  const format = x => x.code + '  •  ' + money(x.price) + (isPulse || x.name.toLowerCase() === title.toLowerCase() ? '' : '  —  ' + x.name)
-  const lines = isPulse
-    ? ['*PULSA REGULER*', ...regular.map(format), ...(active.length ? ['', '*MASA AKTIF*', ...active.map(format)] : [])]
+  const isH2h = x => /h2h|racikan|direct|full reply/i.test(x.name)
+  const regular = isPulse ? sorted.filter(x => !isActive(x)) : isPln ? sorted.filter(x => !isH2h(x)) : sorted
+  const secondary = isPulse ? sorted.filter(isActive) : isPln ? sorted.filter(isH2h) : []
+  const format = x => x.code + '  •  ' + money(x.price) + (isPulse || isPln || x.name.toLowerCase() === title.toLowerCase() ? '' : '  —  ' + x.name)
+  const lines = isPulse || isPln
+    ? [
+        '*' + (isPulse ? 'PULSA REGULER' : 'TOKEN REGULER') + '*',
+        ...regular.map(format),
+        ...(secondary.length ? ['', '*' + (isPulse ? 'MASA AKTIF' : 'TOKEN H2H') + '*', ...secondary.map(format)] : [])
+      ]
     : sorted.map(format)
   return [
     '✦ *SCARD • ' + title.toUpperCase() + '*',
-    isPulse ? 'Pulsa & Masa Aktif' : 'Daftar Produk',
+    isPulse ? 'Pulsa & Masa Aktif' : isPln ? 'Token Listrik' : 'Daftar Produk',
     '━━━━━━━━━━━━━━━━',
     '',
     ...lines,
@@ -99,7 +110,7 @@ function displayList(title, items) {
     '*' + sorted.length + ' Produk Tersedia*',
     '',
     '↩ *ORDER VIA REPLY*',
-    (regular[0] || active[0]).code + ' 081234567890',
+    (regular[0] || secondary[0]).code + ' 081234567890',
     '',
     'SCARD DIGITAL • OKECONNECT'
   ].join('\n')
