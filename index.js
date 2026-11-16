@@ -551,7 +551,7 @@ async function start() {
 
         // PPOB: only accept an order when replying to a genuine SCARD catalog message.
         // Confirmation is a preview until the H2H transaction API is configured.
-        if (body && isOwner) {
+        if (isOwner) {
           const ppobReply = require('./lib/ppobReply')
           if (await ppobReply.handle({ sock, msg, chat, body })) continue
         }
