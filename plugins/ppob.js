@@ -77,20 +77,18 @@ function walletOf(item) {
   }
   return 'Lainnya'
 }
-function displayList(title, items, page, commandText) {
-  const pages = Math.max(1, Math.ceil(items.length / PAGE_SIZE))
-  if (page > pages) return 'Halaman tidak ditemukan.'
-  const slice = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-  if (!slice.length) return 'Belum ada produk di katalog untuk pilihan ini.'
-  const lines = slice.flatMap(x => [x.code + '  •  ' + money(x.price), x.name, ''])
+function displayList(title, items) {
+  if (!items.length) return 'Belum ada produk di katalog untuk pilihan ini.'
+  const sorted = [...items].sort((a, b) => a.price - b.price || a.code.localeCompare(b.code))
+  const lines = sorted.map(x => x.code + '  •  ' + money(x.price) + (x.name.toLowerCase() === title.toLowerCase() ? '' : '  —  ' + x.name))
   return [
     '✦ *SCARD • ' + title.toUpperCase() + '*',
     '━━━━━━━━━━━━━━━━',
     ...lines,
-    'Halaman ' + page + '/' + pages,
-    'Format order: KODE NOMOR_TUJUAN',
-    'Contoh: ' + slice[0].code + ' 081234567890',
-    ...(page < pages ? ['Lanjut: ' + commandText + ' ' + (page + 1)] : [])
+    '━━━━━━━━━━━━━━━━',
+    sorted.length + ' produk tersedia',
+    'Reply list: KODE NOMOR_TUJUAN',
+    'Contoh: ' + sorted[0].code + ' 081234567890'
   ].join('\n')
 }
 function chooseGroup(items, group, args, commandText) {
@@ -110,12 +108,12 @@ function chooseGroup(items, group, args, commandText) {
     const selected = Number.isInteger(index) && index > 0 ? labels[index - 1] : labels.find(x => x.toLowerCase() === String(args[0]).toLowerCase())
     if (!selected) return 'Pilihan tidak ditemukan. Ketik ' + commandText
     const subset = matched.filter(x => getLabel(x) === selected)
-    return displayList(selected, subset, Math.max(1, Number(args[1]) || 1), commandText + ' ' + args[0])
+    return displayList(selected, subset)
   }
-  return displayList(group === 'pln' ? 'TOKEN PLN' : group === 'game' ? 'VOUCHER GAME' : 'LAINNYA', matched, Math.max(1, Number(args[0]) || 1), commandText)
+  return displayList(group === 'pln' ? 'TOKEN PLN' : group === 'game' ? 'VOUCHER GAME' : 'LAINNYA', matched)
 }
 module.exports = {
-  commands: ['ppob', 'pulsa', 'pln', 'ewallet', 'data', 'game', 'saldoppob'],
+  commands: ['ppob', 'pulsa', 'pln', 'ewallet', 'data', 'game', 'saldoppob', ...Array.from({length: 99}, (_, i) => 'pulsa' + (i + 1)), ...Array.from({length: 99}, (_, i) => 'pulsa' + String(i + 1).padStart(2, '0'))],
   ownerOnly: true,
   registered: false,
   menu: 'ppob',
@@ -125,7 +123,7 @@ module.exports = {
       return reply('✦ *SCARD • SALDO PPOB*\n━━━━━━━━━━━━━━━━\n' + (result == null ? 'Saldo belum tersedia' : money(result.balance ?? result)))
     }
     const items = await products()
-    if (command !== 'ppob') return reply(chooseGroup(items, command, args, '/' + command))
+    if (/^pulsa\\d+$/.test(command)) return reply(chooseGroup(items, 'pulsa', [String(Number(command.slice(5)))], '/pulsa'))\n    if (command !== 'ppob') return reply(chooseGroup(items, command, args, '/' + command))
     if (!args.length) return reply([
       '✦ *SCARD • DIGITAL CENTER*',
       '━━━━━━━━━━━━━━━━',
@@ -147,7 +145,7 @@ module.exports = {
       const n = Number(args[1])
       const category = Number.isInteger(n) && n > 0 ? cats[n - 1] : cats.find(x => x.toLowerCase() === String(args[1] || '').toLowerCase())
       if (!category) return reply('Kategori tidak ditemukan. Ketik /ppob lainnya')
-      return reply(displayList(category, other.filter(x => x.category === category), Math.max(1, Number(args[2]) || 1), '/ppob lainnya ' + args[1]))
+      return reply(displayList(category, other.filter(x => x.category === category)))
     }
     return reply(chooseGroup(items, group, args.slice(1), '/' + group))
   }
