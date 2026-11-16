@@ -149,14 +149,28 @@ module.exports = {
     const items = await products()
     if (/^pulsa\d+$/.test(command)) return reply(chooseGroup(items, 'pulsa', [String(Number(command.slice(5)))], '/pulsa'))
     if (command !== 'ppob') return reply(chooseGroup(items, command, args, '/' + command))
-    if (!args.length) return reply([
-      '✦ *SCARD • DIGITAL CENTER*',
-      '━━━━━━━━━━━━━━━━',
-      ...GROUPS.map((g, i) => String(i + 1).padStart(2, '0') + '  ' + g.label),
-      '',
-      'Ketik /pulsa, /pln, /ewallet',
-      'atau pilih /ppob 01'
-    ].join('\n'))
+    if (!args.length) {
+      let balanceText = 'Tidak tersedia'
+      try {
+        const account = await getOrderKuotaBalance()
+        const balance = account?.balance
+        if (balance !== undefined && balance !== null && Number.isFinite(Number(balance))) {
+          balanceText = money(balance)
+        }
+      } catch (err) {
+        console.error('[PPOB] Gagal mengambil saldo:', err.message)
+      }
+      return reply([
+        '✦ *SCARD • DIGITAL CENTER*',
+        '━━━━━━━━━━━━━━━━',
+        '💰 *Saldo OkeConnect:* ' + balanceText,
+        '━━━━━━━━━━━━━━━━',
+        ...GROUPS.map((g, i) => String(i + 1).padStart(2, '0') + '  ' + g.label),
+        '',
+        'Ketik /pulsa, /pln, /ewallet',
+        'atau pilih /ppob 01'
+      ].join('\n'))
+    }
     const index = Number(args[0])
     const group = Number.isInteger(index) && index > 0 ? GROUPS[index - 1]?.command : GROUPS.find(g => g.command === String(args[0]).toLowerCase())?.command
     if (!group) return reply('Pilihan tidak ditemukan. Ketik /ppob')
