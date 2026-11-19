@@ -20,6 +20,7 @@ const { Boom } = require('@hapi/boom')
 const db = require('./lib/database')
 const { loadPlugins } = require('./lib/pluginLoader')
 const { handleAirbotGroupMessage } = require('./lib/airbotBridge')
+const airbotManual = require('./lib/airbotManual')
 const { jidPhone, getText, getQuotedMessage } = require('./lib/utils')
 const { startVotingScheduler } = require('./lib/votingScheduler')
 const { startWebsiteMonitor } = require('./lib/websiteMonitor')
@@ -370,7 +371,8 @@ async function start() {
 
         if (
           !msg.key.fromMe &&
-          await handleAirbotGroupMessage(sock, msg)
+          (await airbotManual.handleGroup(sock, msg) ||
+           await handleAirbotGroupMessage(sock, msg))
         ) {
           continue
         }
@@ -548,6 +550,8 @@ async function start() {
         // ====================================================
         // COMMAND HANDLER
         // ====================================================
+
+        if (await airbotManual.handleOwner({sock, msg, chat, body, isOwner})) continue
 
         // PPOB: only accept an order when replying to a genuine SCARD catalog message.
         // Confirmation is a preview until the H2H transaction API is configured.
