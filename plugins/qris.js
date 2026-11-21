@@ -13,7 +13,7 @@ function makeDynamic(src,amount){
 }
 const rp=n=>'Rp'+Number(n).toLocaleString('id-ID')
 
-module.exports={commands:['qris','qristxt'],registered:false,ownerOnly:false,menu:'/qris <nominal>',async run({sock,msg,reply,args,command,isOwner,db}){
+module.exports={commands:['qris','qristxt'],registered:false,ownerOnly:false,menu:'/qris [bebas|nominal]',async run({sock,msg,reply,args,command,isOwner,db}){
  if(command==='qristxt'){
   if(!isOwner)return reply('❌ Command khusus owner.')
   const v=String(args[0]||'').toLowerCase()
@@ -21,21 +21,23 @@ module.exports={commands:['qris','qristxt'],registered:false,ownerOnly:false,men
   db.setSetting('qrisTxtEnabled',v==='on')
   return reply(`✅ QRIS TXT sekarang *${v.toUpperCase()}*.`)
  }
- const amount=Number(String(args[0]||'').replace(/\D/g,''))
+ const rawAmount=String(args[0]||'').trim().toLowerCase()
+ const isFree=!rawAmount||['bebas','free'].includes(rawAmount)
+ const amount=isFree?null:Number(rawAmount.replace(/\D/g,''))
  const src=String(process.env.QRIS_STATIC||'').trim()
- if(!Number.isSafeInteger(amount)||amount<1)return reply('❌ Format: /qris 15000')
+ if(!isFree&&(!Number.isSafeInteger(amount)||amount<1))return reply('❌ Format: /qris bebas atau /qris 15000')
  if(!src)return reply('❌ QRIS_STATIC belum diisi di .env')
  try{
   const showLoading=db.getSetting('qrisTxtEnabled',true)!==false
-  const loading=showLoading?await sock.sendMessage(msg.key.remoteJid,{text:`⚡ *SCARD PAYMENT*\nSedang membuat QRIS *${rp(amount)}*...\nTunggu sebentar ya ✨`},{quoted:msg}):null
-  const payload=makeDynamic(src,amount)
+  const loading=showLoading?await sock.sendMessage(msg.key.remoteJid,{text:`⚡ *SCARD PAYMENT*\nSedang membuat QRIS *${isFree?'BEBAS':rp(amount)}*...\nTunggu sebentar ya ✨`},{quoted:msg}):null
+  const payload=isFree?src:makeDynamic(src,amount)
   const qr=await QRCode.toBuffer(payload,{width:720,margin:2,errorCorrectionLevel:'M'})
   const minutes=Math.max(1,Number(process.env.QRIS_DELETE_MINUTES||5))
   const exp=new Date(Date.now()+minutes*60000)
   const time=new Intl.DateTimeFormat('id-ID',{timeZone:process.env.TIMEZONE||'Asia/Jakarta',hour:'2-digit',minute:'2-digit',hour12:false}).format(exp).replace(' pukul ','')
-  const svg=Buffer.from(`<svg width="1024" height="1450"><rect width="1024" height="1450" rx="38" fill="white"/><text x="512" y="130" text-anchor="middle" font-family="sans-serif" font-size="48" font-weight="700">QRIS PAYMENT</text><text x="512" y="205" text-anchor="middle" font-family="sans-serif" font-size="54" font-weight="700">SCARD-PROJECT</text><text x="512" y="275" text-anchor="middle" font-family="sans-serif" font-size="38">A01</text><rect x="122" y="345" width="780" height="780" rx="24" fill="#fff"/><text x="512" y="1210" text-anchor="middle" font-family="sans-serif" font-size="64" font-weight="700">${rp(amount)}</text><text x="512" y="1280" text-anchor="middle" font-family="sans-serif" font-size="32">Berlaku ${minutes} menit • sampai ${time} WIB</text><text x="512" y="1350" text-anchor="middle" font-family="sans-serif" font-size="28">Scan dengan aplikasi pembayaran QRIS</text></svg>`)
+  const svg=Buffer.from(`<svg width="1024" height="1450"><rect width="1024" height="1450" rx="38" fill="white"/><text x="512" y="130" text-anchor="middle" font-family="sans-serif" font-size="48" font-weight="700">QRIS PAYMENT</text><text x="512" y="205" text-anchor="middle" font-family="sans-serif" font-size="54" font-weight="700">SCARD-PROJECT</text><text x="512" y="275" text-anchor="middle" font-family="sans-serif" font-size="38">A01</text><rect x="122" y="345" width="780" height="780" rx="24" fill="#fff"/><text x="512" y="1210" text-anchor="middle" font-family="sans-serif" font-size="64" font-weight="700">${isFree?'NOMINAL BEBAS':rp(amount)}</text><text x="512" y="1280" text-anchor="middle" font-family="sans-serif" font-size="32">${isFree?'Masukkan nominal di aplikasi pembayaran':`Berlaku ${minutes} menit • sampai ${time} WIB`}</text><text x="512" y="1350" text-anchor="middle" font-family="sans-serif" font-size="28">Scan dengan aplikasi pembayaran QRIS</text></svg>`)
   const image=await sharp(svg).composite([{input:qr,left:152,top:375}]).png().toBuffer()
-  const sent=await sock.sendMessage(msg.key.remoteJid,{image,caption:`💳 *QRIS PAYMENT*\n\n💰 Nominal : *${rp(amount)}*\n🏪 Merchant: SCARD-PROJECT\n⏳ Berlaku : ${minutes} menit\n🕐 Sampai  : ${time} WIB\n\n_Pesan QRIS akan ditarik otomatis setelah ${minutes} menit._`},{quoted:msg})
+  const sent=await sock.sendMessage(msg.key.remoteJid,{image,caption:`💳 *QRIS PAYMENT*\n\n💰 Nominal : *${isFree?'BEBAS (isi sendiri)':rp(amount)}*\n🏪 Merchant: SCARD-PROJECT${isFree?'':`\n⏳ Berlaku : ${minutes} menit\n🕐 Sampai  : ${time} WIB`}\n\n_Pesan QRIS akan ditarik otomatis setelah ${minutes} menit._`},{quoted:msg})
   if(loading)await sock.sendMessage(msg.key.remoteJid,{delete:loading.key}).catch(e=>console.error('[QRIS LOADING DELETE]',e?.message||e))
   setTimeout(()=>sock.sendMessage(msg.key.remoteJid,{delete:sent.key}).catch(e=>console.error('[QRIS DELETE]',e?.message||e)),minutes*60000)
  }catch(e){console.error('[QRIS]',e);return reply('❌ Gagal membuat QRIS: '+String(e?.message||e))}
