@@ -9,16 +9,20 @@ module.exports = {
     const jid = msg.key.remoteJid;
     const {downloadContentFromMessage,normalizeMessageContent} = await import('baileys');
     const content = normalizeMessageContent(msg.message) || {};
-    const quoted = normalizeMessageContent(content.extendedTextMessage?.contextInfo?.quotedMessage) || {};
+    const quoted = normalizeMessageContent((content.imageMessage || content.videoMessage || content.extendedTextMessage || content.audioMessage)?.contextInfo?.quotedMessage) || {};
     const video = content.videoMessage || quoted.videoMessage;
-    if (!video) return reply('🎵 *SOUND STICKER*\n\nKirim video bersuara dengan caption /sa\natau reply video dengan /sa.');
+    const image = content.imageMessage || quoted.imageMessage;
+    const voice = content.audioMessage || quoted.audioMessage;
+    const pair = !video && image && voice;
+    if (!video && !pair) return reply('🎵 *SOUND STICKER*\n\nKirim video bersuara dengan caption /sa\natau reply video dengan /sa.\n\nFoto + VN: reply voice note dengan foto dan caption sa.');
     if (busy) return reply('⏳ Sound Sticker sedang diproses.');
     const limit = 25 * 1024 * 1024;
-    if (Number(video.fileLength || 0) > limit) return reply('⚠️ Maksimal video 25 MB.');
+    if ([video,image,voice].some(m => Number(m?.fileLength || 0) > limit)) return reply('⚠️ Maksimal video 25 MB.');
     busy = true;
     try {
       await reply('⏳ Membuat stiker bersuara...');
-      const stream = await downloadContentFromMessage(video,'video');
+      const download = async (media,type) => {
+      const stream = await downloadContentFromMessage(media,type);
       const chunks = [];
       let size = 0;
       for await (const chunk of stream) {
@@ -26,8 +30,12 @@ module.exports = {
         if (size > limit) {stream.destroy?.(); throw new Error('Video melebihi 25 MB');}
         chunks.push(chunk);
       }
+      return Buffer.concat(chunks);
+      };
+      const buffer = await download(pair ? image : video,pair ? 'image' : 'video');
+      const audio = pair ? await download(voice,'audio') : undefined;
       const {sendSoundSticker} = await import('../lib/sound-sticker/sender.mjs');
-      await sendSoundSticker(sock,jid,Buffer.concat(chunks),msg);
+      await sendSoundSticker(sock,jid,buffer,msg,audio);
       console.log('[SA] Sound Sticker sent');
     } catch (error) {
       console.error('[SA ERROR]',error.message);
