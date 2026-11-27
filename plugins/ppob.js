@@ -47,7 +47,9 @@ const GROUPS = [
   { label: 'Token PLN', command: 'pln' },
   { label: 'E-Wallet', command: 'ewallet' },
   { label: 'Voucher Game', command: 'game' },
-  { label: 'Layanan Lainnya', command: 'lainnya' }
+  { label: 'Layanan Lainnya', command: 'lainnya' },
+  { label: 'Paket SMS', command: 'sms' },
+  { label: 'Paket Telepon', command: 'telepon' }
 ]
 function groupOf(item) {
   const cat = item.category.toLowerCase()
@@ -58,6 +60,13 @@ function groupOf(item) {
   if (/token pln|pln prabayar|token listrik|h2h pln|h2h token pln/.test(name) || /^(?:cpln|pln(?:z|p|b|f)?\d)/.test(code)) return 'pln'
   if (/dana|gopay|ovo|shopee\s?pay|shopee\s?pay|spay|link\s?aja|isaku/.test(name + ' ' + code)) return 'ewallet'
   if (/game|voucher game|mobile legends|free fire|pubg|valorant|steam|roblox/.test(name)) return 'game'
+  const sms = /\bsms\b|\bpesan singkat\b/
+  const voice = /\b(?:telpon|telepon|telp|nelpon|nelp|voice|panggilan|talktime|menit)\b/
+  // Explicit product names take priority over broad provider categories.
+  if (voice.test(name)) return 'telepon'
+  if (sms.test(name)) return 'sms'
+  if (voice.test(cat)) return 'telepon'
+  if (sms.test(cat)) return 'sms'
   if (/kuota|paket data|internet/.test(cat) || /kuota|paket data|internet/.test(name)) return 'data'
   if (/pulsa/.test(cat) && !/transfer/.test(cat)) return 'pulsa'
   if (/dompet digital|e.wallet|e-wallet/.test(cat)) return 'ewallet'
@@ -141,11 +150,11 @@ function displayList(title, items) {
 function chooseGroup(items, group, args, commandText) {
   const matched = items.filter(x => groupOf(x) === group)
   if (!matched.length) return 'Produk belum tersedia pada katalog.'
-  if (group === 'pulsa' || group === 'data' || group === 'ewallet') {
+  if (group === 'pulsa' || group === 'data' || group === 'ewallet' || group === 'sms' || group === 'telepon') {
     const getLabel = group === 'ewallet' ? walletOf : operatorOf
     const labels = [...new Set(matched.map(getLabel))].sort((a, b) => a.localeCompare(b, 'id'))
     if (!args.length) return [
-      '✦ *SCARD • ' + (group === 'data' ? 'PAKET INTERNET' : group === 'ewallet' ? 'E-WALLET' : 'PULSA') + '*',
+      '✦ *SCARD • ' + (group === 'data' ? 'PAKET INTERNET' : group === 'ewallet' ? 'E-WALLET' : group === 'sms' ? 'PAKET SMS' : group === 'telepon' ? 'PAKET TELEPON' : 'PULSA') + '*',
       '━━━━━━━━━━━━━━━━',
       ...labels.map((label, i) => String(i + 1).padStart(2, '0') + '  ' + label),
       '',
@@ -161,11 +170,12 @@ function chooseGroup(items, group, args, commandText) {
   return displayList(group === 'pln' ? 'TOKEN PLN' : group === 'game' ? 'VOUCHER GAME' : 'LAINNYA', matched, args[0]===undefined?1:Number(args[0]), commandText)
 }
 module.exports = {
-  commands: ['ppob', 'pulsa', 'pln', 'ewallet', 'data', 'game', 'saldoppob', 'ppobstatus', ...Object.keys(WALLET_SHORTCUTS), ...Object.keys(PULSA_SHORTCUTS), ...Array.from({length: 99}, (_, i) => 'pulsa' + (i + 1)), ...Array.from({length: 99}, (_, i) => 'pulsa' + String(i + 1).padStart(2, '0'))],
+  commands: ['ppob', 'pulsa', 'pln', 'ewallet', 'data', 'game', 'sms', 'telepon', 'telp', 'nelpon', 'saldoppob', 'ppobstatus', ...Object.keys(WALLET_SHORTCUTS), ...Object.keys(PULSA_SHORTCUTS), ...Array.from({length: 99}, (_, i) => 'pulsa' + (i + 1)), ...Array.from({length: 99}, (_, i) => 'pulsa' + String(i + 1).padStart(2, '0'))],
   ownerOnly: true,
   registered: false,
   menu: 'ppob',
   async run({ command, args, reply }) {
+    if (command === 'telp' || command === 'nelpon') command = 'telepon'
     if (command === 'ppobstatus') return reply(await require('../lib/ppobReply').statusCommand(args[0]))
     if (command === 'saldoppob') {
       const result = await getOrderKuotaBalance()
@@ -200,12 +210,12 @@ module.exports = {
         '━━━━━━━━━━━━━━━━',
         ...GROUPS.map((g, i) => String(i + 1).padStart(2, '0') + '  ' + g.label),
         '',
-        'Ketik /pulsa, /pln, /ewallet',
+        'Ketik /pulsa, /data, /sms, /telepon, /pln, /ewallet',
         'atau pilih /ppob 01'
       ].join('\n'))
     }
     const index = Number(args[0])
-    const group = Number.isInteger(index) && index > 0 ? GROUPS[index - 1]?.command : GROUPS.find(g => g.command === String(args[0]).toLowerCase())?.command
+    const group = Number.isInteger(index) && index > 0 ? GROUPS[index - 1]?.command : GROUPS.find(g => g.command === ( ['telp', 'nelpon'].includes(String(args[0]).toLowerCase()) ? 'telepon' : String(args[0]).toLowerCase()))?.command
     if (!group) return reply('Pilihan tidak ditemukan. Ketik /ppob')
     if (group === 'lainnya' && args.length === 1) {
       const cats = categories(items.filter(x => groupOf(x) === 'lainnya'))
